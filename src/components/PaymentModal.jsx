@@ -20,7 +20,18 @@ const PaymentModal = ({ isOpen, onClose }) => {
     // PHASE 3: Fortify State Handoff
     // Serialize and store the entire application state before redirecting to Stripe
     sessionStorage.setItem('paystub_delivery_email', email);
-    sessionStorage.setItem('paystub_draft_data', JSON.stringify(storeState));
+
+    // Explicitly select the state keys we want to store, to avoid storing actions/functions
+    const stateToStore = {
+      employerDetails: storeState.employerDetails,
+      employeeDetails: storeState.employeeDetails,
+      payPeriod: storeState.payPeriod,
+      earnings: storeState.earnings,
+      customDeductions: storeState.customDeductions,
+      calculatedTotals: storeState.calculatedTotals
+    };
+
+    sessionStorage.setItem('paystub_draft_data', JSON.stringify(stateToStore));
 
     try {
       const response = await fetch('/api/create-checkout-session', {
@@ -35,17 +46,23 @@ const PaymentModal = ({ isOpen, onClose }) => {
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Failed to initialize checkout gateway. Status: ${response.status}`);
+      }
+
       const data = await response.json();
       
       if (data.url) {
         // Redirect to actual Stripe Checkout
         window.location.href = data.url;
       } else {
-        throw new Error("Failed to initialize checkout gateway.");
+        throw new Error("Checkout URL not found in response.");
       }
     } catch (e) {
       console.error("Payment Initialization Failed:", e);
-      alert("Billing Gateway Error. Please try again or contact support@axim.us.com");
+      alert(`Billing Gateway Error: ${e.message}. Please try again or contact support@axim.us.com`);
+    } finally {
       setLoading(false);
     }
   };
