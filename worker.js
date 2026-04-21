@@ -1,52 +1,114 @@
 /**
- * Cloudflare Worker Proxy for AXiM Pay Stub Generator
- * Handles Stripe Session creation dynamically ensuring CORS and environment routing.
+ * AXiM Systems Edge Proxy - Production v1.0
+ * Handles Stripe orchestration, session verification, and PDF generation stubs.
  */
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // Restrict this in production to your domain
+  'Access-Control-Allow-Origin': '*', // In production, replace with specific AXiM domains
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
 export default {
   async fetch(request, env, ctx) {
+    // Handle CORS Pre-flight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
     }
 
     const url = new URL(request.url);
+    const apiBase = env.AXIM_API_BASE || 'https://api.axim.us.com/v1';
 
+    /**
+     * PHASE 1: Secure Stripe Checkout Session Creation
+     */
     if (url.pathname === '/api/create-checkout-session' && request.method === 'POST') {
       try {
         const body = await request.json();
-        const origin = request.headers.get('Origin') || 'http://localhost:5173';
-        
-        // In a real implementation:
-        // 1. Validate body.productId
-        // 2. Make fetch to Stripe API using env.STRIPE_SECRET_KEY
-        // 3. Pass success_url: `${origin}/#/success`
-        // 4. Pass cancel_url: `${origin}/#/app/generator`
-        
-        // Mock Stripe Response for the frontend to handle redirect:
-        const mockStripeResponse = {
-          url: `${origin}/#/success` // Bypassing actual stripe for demo purposes
-        };
+        const origin = request.headers.get('Origin');
 
-        return new Response(JSON.stringify(mockStripeResponse), {
+        // Proxy to AXiM Core Billing Engine
+        const stripeResponse = await fetch(`${apiBase}/functions/create-checkout-session`, {
+          method: 'POST',
           headers: {
-            ...corsHeaders,
-            'Content-Type': 'application/json'
-          }
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.AXIM_API_KEY}`,
+          },
+          body: JSON.stringify({
+            productId: body.productId,
+            metadata: body.metadata,
+            success_url: `${origin}/#/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/#/app/generator`,
+          }),
+        });
+
+        const data = await stripeResponse.json();
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { 
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        return new Response(JSON.stringify({ error: 'Gateway Error: ' + err.message }), { 
+          status: 502, 
+          headers: corsHeaders 
         });
       }
     }
 
-    return new Response('Not Found', { status: 404, headers: corsHeaders });
+    /**
+     * PHASE 2: Session Verification
+     */
+    if (url.pathname === '/api/verify-session' && request.method === 'POST') {
+      try {
+        const { session_id } = await request.json();
+        
+        // Proxy to AXiM Core to verify Stripe payment state
+        const verifyResponse = await fetch(`${apiBase}/functions/verify-session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.AXIM_API_KEY}`,
+          },
+          body: JSON.stringify({ session_id }),
+        });
+
+        const status = await verifyResponse.json();
+        return new Response(JSON.stringify(status), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ isPaid: false, error: err.message }), { 
+          status: 403, 
+          headers: corsHeaders 
+        });
+      }
+    }
+
+    /**
+     * PHASE 4: Edge PDF Generation Stub
+     */
+    if (url.pathname === '/api/generate-paystub' && request.method === 'POST') {
+      try {
+        const { session_id, formData } = await request.json();
+
+        // 1. Verify session_id belongs to a paid transaction again (Server-side check)
+        // 2. Map formData to pdf-lib template
+        // 3. Return PDF stream
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: "PDF Drawing Engine Initialized. Ready for final render.",
+          downloadUrl: "https://example.com/mock-pdf-download" 
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: "Generation Failed" }), { 
+          status: 500, 
+          headers: corsHeaders 
+        });
+      }
+    }
+
+    return new Response('AXiM Systems Proxy: Endpoint Not Found', { status: 404, headers: corsHeaders });
   }
 };

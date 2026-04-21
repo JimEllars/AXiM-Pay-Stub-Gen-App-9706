@@ -1,45 +1,151 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
-import { FiCheckCircle, FiDownload } from 'react-icons/fi';
+import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { usePayStubStore } from '../store/usePayStubStore';
 
 const Success = () => {
-  const [email, setEmail] = useState('');
+  const [searchParams] = useSearchParams();
+  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
+  const [downloading, setDownloading] = useState(false);
+  const hydrateStore = usePayStubStore(state => state.hydrateStore);
+  const storeState = usePayStubStore();
 
   useEffect(() => {
-    const storedEmail = sessionStorage.getItem('paystub_delivery_email');
-    if (storedEmail) setEmail(storedEmail);
-  }, []);
+    const verifyPayment = async () => {
+      const sessionId = searchParams.get('session_id');
+      
+      if (!sessionId) {
+        setStatus('failed');
+        return;
+      }
+
+      try {
+        // PHASE 2: Secure Verification Proxy
+        const response = await fetch('/api/verify-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId })
+        });
+
+        const data = await response.json();
+
+        if (data.isPaid) {
+          // PHASE 3: Re-hydrate State
+          const rawDraft = sessionStorage.getItem('paystub_draft_data');
+          if (rawDraft) {
+            hydrateStore(JSON.parse(rawDraft));
+          }
+          setStatus('success');
+        } else {
+          setStatus('failed');
+        }
+      } catch (e) {
+        console.error("Verification Error:", e);
+        setStatus('failed');
+      }
+    };
+
+    verifyPayment();
+  }, [searchParams, hydrateStore]);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      // PHASE 4: Request Secure Edge PDF Generation
+      const response = await fetch('/api/generate-paystub', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: searchParams.get('session_id'),
+          formData: storeState
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        // In a real app, this would be a Blob download
+        alert("PDF Generation Initiated. In a production environment, your download would start now.");
+      }
+    } catch (e) {
+      alert("Download failed. Please check your email for the backup copy.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  if (status === 'verifying') {
+    return (
+      <div className="min-h-screen bg-bg-void flex flex-col items-center justify-center p-6 text-white">
+        <motion.div 
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          className="text-axim-teal mb-6"
+        >
+          <SafeIcon icon={FiLoader} size={48} />
+        </motion.div>
+        <h2 className="text-2xl font-black uppercase tracking-widest mb-2">Verifying Payment</h2>
+        <p className="text-gray-500 font-mono text-xs">Authenticating Stripe Session ID...</p>
+      </div>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <div className="min-h-screen bg-bg-void flex flex-col items-center justify-center p-6 text-white text-center">
+        <div className="bg-red-500/10 p-6 rounded-full text-red-500 mb-8">
+          <SafeIcon icon={FiAlertCircle} size={64} />
+        </div>
+        <h2 className="text-4xl font-black tracking-tighter mb-4">VERIFICATION FAILED</h2>
+        <p className="text-gray-400 max-w-md mx-auto mb-10 leading-relaxed">
+          We could not verify your payment session. If you believe this is an error, please contact our enterprise support team.
+        </p>
+        <Link to="/app/generator" className="bg-white text-black font-bold px-10 py-5 rounded-2xl hover:bg-axim-teal transition-all">
+          Return to Generator
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg-void flex items-center justify-center p-4">
       <motion.div 
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="bg-glass border border-white/10 p-10 rounded-2xl max-w-lg w-full text-center relative overflow-hidden"
+        className="bg-[#0a0a0a] border border-white/10 p-12 rounded-3xl max-w-xl w-full text-center relative overflow-hidden"
       >
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-axim-teal to-axim-gold" />
         
-        <div className="flex justify-center mb-6">
-          <div className="w-20 h-20 bg-axim-teal/10 rounded-full flex items-center justify-center text-axim-teal">
-            <SafeIcon icon={FiCheckCircle} size={40} />
+        <div className="flex justify-center mb-8">
+          <div className="w-24 h-24 bg-axim-teal/10 rounded-3xl flex items-center justify-center text-axim-teal shadow-[0_0_40px_rgba(0,229,255,0.15)]">
+            <SafeIcon icon={FiCheckCircle} size={48} />
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-4">Payment Successful!</h1>
-        <p className="text-gray-400 mb-8">
-          Your professional pay stub has been generated. A copy has been securely emailed to <span className="text-white font-medium">{email || 'your email'}</span>.
+        <h1 className="text-4xl font-black text-white mb-4 tracking-tight">ORDER COMPLETE</h1>
+        <p className="text-gray-400 mb-10 leading-relaxed px-4">
+          Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails.name || 'the employee'}</span> is now available for download.
         </p>
 
         <div className="space-y-4">
-          <button className="w-full bg-axim-teal text-bg-void font-bold px-6 py-4 rounded-xl hover:bg-white transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-            <SafeIcon icon={FiDownload} />
-            Download PDF Now
+          <button 
+            onClick={handleDownload}
+            disabled={downloading}
+            className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-[0_0_40px_rgba(0,229,255,0.2)]"
+          >
+            {downloading ? (
+              <span className="animate-pulse">Generating Secure PDF...</span>
+            ) : (
+              <>
+                <SafeIcon icon={FiDownload} />
+                Download Final PDF
+              </>
+            )}
           </button>
           
-          <Link to="/" className="block w-full border border-white/20 text-white font-medium px-6 py-4 rounded-xl hover:bg-white/5 transition-all">
-            Return to Home
+          <Link to="/" className="block w-full text-gray-500 font-bold py-4 hover:text-white transition-all uppercase tracking-widest text-[10px]">
+            Return to Dashboard
           </Link>
         </div>
       </motion.div>
