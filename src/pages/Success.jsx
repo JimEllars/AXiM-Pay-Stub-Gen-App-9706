@@ -72,17 +72,26 @@ const Success = () => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'PDF Generation API failed');
+        const errorText = await response.text();
+        let errorMessage = 'PDF Generation API failed';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json();
-      if (data.success) {
-        // In a real app, this would be a Blob download
-        alert("PDF Generation Initiated. In a production environment, your download would start now.");
-      } else {
-        throw new Error(data.error || 'Unknown error occurred during PDF generation');
-      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'AXiM_PayStub.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
     } catch (e) {
       console.error("Download Error:", e);
       alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
