@@ -52,12 +52,59 @@ export const usePayStubStore = create((set, get) => ({
     set((state) => ({ employeeDetails: { ...state.employeeDetails, [field]: value } }));
     get().recalculateAll();
   },
+
+
   updatePayPeriod: (field, value) => {
-    set((state) => ({ payPeriod: { ...state.payPeriod, [field]: value } }));
+    set((state) => {
+      const newPayPeriod = { ...state.payPeriod, [field]: value };
+
+      if (field === 'startDate' || field === 'frequency') {
+        const startDate = field === 'startDate' ? value : newPayPeriod.startDate;
+        if (startDate) {
+          // Parse YYYY-MM-DD safely into parts to avoid timezone offset issues
+          const [year, month, day] = startDate.split('-').map(Number);
+          // Create date in local timezone to safely manipulate
+          const start = new Date(year, month - 1, day);
+          let daysToAdd = 0;
+
+          if (newPayPeriod.frequency === 'weekly') {
+            daysToAdd = 6;
+          } else if (newPayPeriod.frequency === 'bi-weekly') {
+            daysToAdd = 13;
+          } else if (newPayPeriod.frequency === 'semi-monthly') {
+            daysToAdd = 14;
+          } else if (newPayPeriod.frequency === 'monthly') {
+            // End of the month
+            const end = new Date(year, month, 0); // 0th day of next month is last day of current month
+
+            // formatting helper
+            const formatD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            newPayPeriod.endDate = formatD(end);
+
+            const payD = new Date(end);
+            payD.setDate(payD.getDate() + 2);
+            newPayPeriod.payDate = formatD(payD);
+            return { payPeriod: newPayPeriod };
+          }
+
+          if (daysToAdd > 0) {
+            const end = new Date(start);
+            end.setDate(end.getDate() + daysToAdd);
+
+            const formatD = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            newPayPeriod.endDate = formatD(end);
+
+            const payD = new Date(end);
+            payD.setDate(payD.getDate() + 2);
+            newPayPeriod.payDate = formatD(payD);
+          }
+        }
+      }
+      return { payPeriod: newPayPeriod };
+    });
     get().recalculateAll();
   },
-
-  addEarning: () => set((state) => ({
+addEarning: () => set((state) => ({
     earnings: [...state.earnings, { id: Date.now().toString(), type: 'Custom', hours: 0, rate: 0, currentTotal: 0, ytdTotal: 0 }]
   })),
 
