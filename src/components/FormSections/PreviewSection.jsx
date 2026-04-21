@@ -11,13 +11,15 @@ const PreviewSection = ({ onFinalize }) => {
       <div className="bg-white text-black p-8 md:p-12 rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative overflow-hidden">
         
         {/* Professional Watermark Overlay */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden opacity-[0.03]">
-           <div className="transform -rotate-45 text-black text-[12vw] font-black uppercase tracking-tighter whitespace-nowrap">
-             AXIM SYSTEMS PREVIEW
-           </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 overflow-hidden opacity-[0.1] mix-blend-multiply">
+           {[...Array(20)].map((_, i) => (
+             <div key={i} className="transform -rotate-45 text-black text-[4vw] font-black uppercase tracking-tighter whitespace-nowrap my-4">
+               SAMPLE / DRAFT ONLY - NOT VALID FOR VERIFICATION
+             </div>
+           ))}
         </div>
 
-        <div className="relative z-20">
+        <div className="relative z-20 select-none">
           {/* Stub Header */}
           <div className="flex flex-col md:flex-row justify-between items-start border-b-2 border-black/10 pb-8 mb-8 gap-6">
             <div>

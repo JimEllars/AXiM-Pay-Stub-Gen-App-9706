@@ -1,3 +1,4 @@
+import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
 /**
  * AXiM Systems Edge Proxy - Production v1.0
  * Handles Stripe orchestration, session verification, and PDF generation stubs.
@@ -134,14 +135,135 @@ export default {
         }
 
         // 2. Map formData to pdf-lib template
-        // 3. Return PDF stream
+        const pdfDoc = await PDFDocument.create();
+        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+        const page = pdfDoc.addPage([612, 792]); // Letter size
         
-        return new Response(JSON.stringify({ 
-          success: true, 
-          message: "PDF Drawing Engine Initialized. Ready for final render.",
-          downloadUrl: "https://example.com/mock-pdf-download" 
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals } = formData;
+
+        const drawText = (text, x, y, size = 10, isBold = false) => {
+          page.drawText(String(text || ''), {
+            x,
+            y,
+            size,
+            font: isBold ? boldFont : font,
+            color: rgb(0, 0, 0),
+          });
+        };
+
+        // Layout variables
+        let currentY = 750;
+
+        // Header
+        drawText(employerDetails?.name || 'Company Name', 50, currentY, 18, true);
+        currentY -= 20;
+        drawText(employerDetails?.address || 'Company Address', 50, currentY);
+        currentY -= 15;
+        if (employerDetails?.ein) {
+          drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
+        }
+
+        currentY -= 40;
+        drawText('EARNINGS STATEMENT', 250, currentY, 14, true);
+
+        currentY -= 30;
+        // Employee Details (Left) and Pay Period (Right)
+        drawText('Employee:', 50, currentY, 10, true);
+        drawText(employeeDetails?.name || 'Employee Name', 120, currentY);
+        drawText('Pay Frequency:', 350, currentY, 10, true);
+        drawText(payPeriod?.frequency || 'N/A', 450, currentY);
+
+        currentY -= 15;
+        drawText('Address:', 50, currentY, 10, true);
+        drawText(employeeDetails?.address || 'N/A', 120, currentY);
+        drawText('Period:', 350, currentY, 10, true);
+        drawText(`${payPeriod?.startDate || 'N/A'} - ${payPeriod?.endDate || 'N/A'}`, 450, currentY);
+
+        currentY -= 15;
+        drawText('Marital Status:', 50, currentY, 10, true);
+        drawText(employeeDetails?.maritalStatus || 'N/A', 140, currentY);
+        drawText('Pay Date:', 350, currentY, 10, true);
+        drawText(payPeriod?.payDate || 'N/A', 450, currentY);
+
+        currentY -= 15;
+        drawText('State:', 50, currentY, 10, true);
+        drawText(employeeDetails?.state || 'N/A', 140, currentY);
+
+        currentY -= 40;
+        // Tables Header
+        drawText('INCOME', 50, currentY, 12, true);
+        drawText('DEDUCTIONS & TAXES', 350, currentY, 12, true);
+
+        currentY -= 10;
+        page.drawLine({ start: { x: 50, y: currentY }, end: { x: 550, y: currentY }, thickness: 1, color: rgb(0.8, 0.8, 0.8) });
+
+        currentY -= 20;
+
+        // Income / Deductions rows
+        let leftY = currentY;
+        let rightY = currentY;
+
+        // Earnings
+        if (earnings && Array.isArray(earnings)) {
+          earnings.forEach(e => {
+            drawText(`${e.type} (${e.hours}h)`, 50, leftY);
+            drawText(`${(e.currentTotal || 0).toFixed(2)}`, 250, leftY);
+            leftY -= 15;
+          });
+        }
+
+        leftY -= 10;
+        drawText('Gross Pay:', 50, leftY, 10, true);
+        drawText(`${(calculatedTotals?.currentGross || 0).toFixed(2)}`, 250, leftY, 10, true);
+
+        // Deductions
+        const taxes = calculatedTotals?.taxes || {};
+        drawText('Social Security:', 350, rightY);
+        drawText(`${(taxes.socialSecurity || 0).toFixed(2)}`, 500, rightY);
+        rightY -= 15;
+
+        drawText('Medicare:', 350, rightY);
+        drawText(`${(taxes.medicare || 0).toFixed(2)}`, 500, rightY);
+        rightY -= 15;
+
+        drawText('Federal Income Tax:', 350, rightY);
+        drawText(`${(taxes.federalIncomeTax || 0).toFixed(2)}`, 500, rightY);
+        rightY -= 15;
+
+        if (taxes.stateIncomeTax > 0) {
+          drawText('State Income Tax:', 350, rightY);
+          drawText(`${(taxes.stateIncomeTax || 0).toFixed(2)}`, 500, rightY);
+          rightY -= 15;
+        }
+
+        if (customDeductions && Array.isArray(customDeductions)) {
+          customDeductions.forEach(d => {
+            drawText(d.name || 'Deduction', 350, rightY);
+            drawText(`${(d.amount || 0).toFixed(2)}`, 500, rightY);
+            rightY -= 15;
+          });
+        }
+
+        rightY -= 10;
+        drawText('Total Deductions:', 350, rightY, 10, true);
+        drawText(`${(calculatedTotals?.totalDeductions || 0).toFixed(2)}`, 500, rightY, 10, true);
+
+        const finalY = Math.min(leftY, rightY) - 40;
+        page.drawLine({ start: { x: 50, y: finalY + 20 }, end: { x: 550, y: finalY + 20 }, thickness: 1, color: rgb(0.8, 0.8, 0.8) });
+
+        drawText('NET PAY:', 350, finalY, 14, true);
+        drawText(`${(calculatedTotals?.netPay || 0).toFixed(2)}`, 450, finalY, 14, true);
+
+        const pdfBytes = await pdfDoc.save();
+
+        // 3. Return PDF stream
+        return new Response(pdfBytes, {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/pdf',
+            'Content-Disposition': 'attachment; filename="paystub.pdf"'
+          }
         });
       } catch (err) {
         return new Response(JSON.stringify({ error: "Generation Failed: " + err.message }), {
