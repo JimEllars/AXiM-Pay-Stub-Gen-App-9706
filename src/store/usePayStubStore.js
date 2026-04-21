@@ -1,0 +1,237 @@
+import { create } from 'zustand';
+import { PAY_FREQUENCIES, STANDARD_DEDUCTION_2024 } from '../utils/constants';
+
+const TAX_RATES = {
+  SOCIAL_SECURITY: 0.062,      // 6.2%
+  MEDICARE: 0.0145,            // 1.45%
+  MEDICARE_SURCHARGE: 0.009,   // 0.9% for high earners
+  MEDICARE_THRESHOLD: 200000,  // Annual threshold for surcharge
+  SS_WAGE_BASE: 168600         // 2024/2025 Wage base limit
+};
+
+const initialFormState = {
+  employerDetails: {
+    name: '',
+    address: '',
+    ein: '',
+  },
+  employeeDetails: {
+    name: '',
+    address: '',
+    maritalStatus: 'single',
+    state: 'TX',
+  },
+  payPeriod: {
+    frequency: 'bi-weekly',
+    startDate: '',
+    endDate: '',
+    payDate: '',
+  },
+  earnings: [
+    { id: '1', type: 'Regular', hours: 40, rate: 0.00, currentTotal: 0.00, ytdTotal: 0.00 }
+  ],
+  customDeductions: [],
+  calculatedTotals: {
+    currentGross: 0.00,
+    ytdGross: 0.00,
+    taxes: {
+      socialSecurity: 0.00,
+      medicare: 0.00,
+      federalIncomeTax: 0.00,
+      stateIncomeTax: 0.00,
+    },
+    totalDeductions: 0.00,
+    netPay: 0.00
+  }
+};
+
+export const usePayStubStore = create((set, get) => ({
+  ...initialFormState,
+
+  updateEmployer: (field, value) => {
+    set((state) => ({ employerDetails: { ...state.employerDetails, [field]: value } }));
+  },
+
+  updateEmployee: (field, value) => {
+    set((state) => ({ employeeDetails: { ...state.employeeDetails, [field]: value } }));
+    get().recalculateAll();
+  },
+
+  updatePayPeriod: (field, value) => {
+    set((state) => ({ payPeriod: { ...state.payPeriod, [field]: value } }));
+    get().recalculateAll();
+  },
+
+  // Earnings Actions
+  addEarning: () => {
+    set((state) => ({
+      earnings: [
+        ...state.earnings,
+        { id: Date.now().toString(), type: 'Custom', hours: 0, rate: 0, currentTotal: 0, ytdTotal: 0 }
+      ]
+    }));
+  },
+
+  updateEarning: (id, field, value) => {
+    set((state) => ({
+      earnings: state.earnings.map(e => 
+        e.id === id ? { ...e, [field]: field === 'type' ? value : (parseFloat(value) || 0) } : e
+      )
+    }));
+    get().recalculateAll();
+  },
+
+  removeEarning: (id) => {
+    set((state) => ({
+      earnings: state.earnings.filter(e => e.id !== id)
+    }));
+    get().recalculateAll();
+  },
+
+  // Custom Deductions Actions
+  addCustomDeduction: () => {
+    set((state) => ({
+      customDeductions: [
+        ...state.customDeductions,
+        { id: Date.now().toString(), name: 'New Deduction', amount: 0 }
+      ]
+    }));
+    get().recalculateAll();
+  },
+
+  updateCustomDeduction: (id, field, value) => {
+    set((state) => ({
+      customDeductions: state.customDeductions.map(d => 
+        d.id === id ? { ...d, [field]: field === 'name' ? value : (parseFloat(value) || 0) } : d
+      )
+    }));
+    get().recalculateAll();
+  },
+
+  removeCustomDeduction: (id) => {
+    set((state) => ({
+      customDeductions: state.customDeductions.filter(d => d.id !== id)
+    }));
+    get().recalculateAll();
+  },
+
+  updateTaxOverride: (taxType, amount) => {
+    set((state) => ({
+      calculatedTotals: {
+        ...state.calculatedTotals,
+        taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(amount) || 0 }
+      }
+    }));
+    get().recalculateNetPay();
+  },
+
+  updateYtdGross: (amount) => {
+    set((state) => ({
+      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(amount) || 0 }
+    }));
+    get().recalculateAll();
+  },
+
+  // Math Engine
+  calculateGrossPay: () => {
+    const { earnings } = get();
+    let currentGross = 0;
+
+    const updatedEarnings = earnings.map(e => {
+      let total = 0;
+      if (e.type === 'Overtime') {
+        total = e.hours * (e.rate * 1.5);
+      } else if (e.type === 'Regular') {
+        total = e.hours * e.rate;
+      } else {
+        // Bonus/Commission often just have a total rate/amount
+        total = e.rate || 0;
+      }
+      currentGross += total;
+      return { ...e, currentTotal: parseFloat(total.toFixed(2)) };
+    });
+
+    set({ earnings: updatedEarnings });
+    return parseFloat(currentGross.toFixed(2));
+  },
+
+  calculateFICA: (grossPay, ytdGross) => {
+    let socialSecurity = 0;
+    if (ytdGross < TAX_RATES.SS_WAGE_BASE) {
+      socialSecurity = Math.min(grossPay, TAX_RATES.SS_WAGE_BASE - ytdGross) * TAX_RATES.SOCIAL_SECURITY;
+    }
+
+    let medicare = grossPay * TAX_RATES.MEDICARE;
+    if (ytdGross > TAX_RATES.MEDICARE_THRESHOLD) {
+      medicare += (grossPay * TAX_RATES.MEDICARE_SURCHARGE);
+    }
+
+    return {
+      socialSecurity: parseFloat(socialSecurity.toFixed(2)),
+      medicare: parseFloat(medicare.toFixed(2))
+    };
+  },
+
+  calculateFIT: (grossPay, frequency, maritalStatus) => {
+    const periodsPerYear = PAY_FREQUENCIES[frequency]?.periodsPerYear || 26;
+    const annualized = grossPay * periodsPerYear;
+    const standardDeduction = STANDARD_DEDUCTION_2024[maritalStatus] || STANDARD_DEDUCTION_2024.single;
+    const taxableIncome = Math.max(0, annualized - standardDeduction);
+
+    let annualTax = 0;
+    // Simplified 2024 Brackets
+    if (taxableIncome <= 11600) {
+      annualTax = taxableIncome * 0.10;
+    } else if (taxableIncome <= 47150) {
+      annualTax = 1160 + ((taxableIncome - 11600) * 0.12);
+    } else if (taxableIncome <= 100525) {
+      annualTax = 5426 + ((taxableIncome - 47150) * 0.22);
+    } else {
+      annualTax = 17168 + ((taxableIncome - 100525) * 0.24);
+    }
+
+    return parseFloat((annualTax / periodsPerYear).toFixed(2));
+  },
+
+  recalculateNetPay: () => {
+    const state = get();
+    const { currentGross, taxes } = state.calculatedTotals;
+    const totalTaxes = taxes.socialSecurity + taxes.medicare + taxes.federalIncomeTax + taxes.stateIncomeTax;
+    
+    let totalCustomDeductions = 0;
+    state.customDeductions.forEach(d => totalCustomDeductions += (d.amount || 0));
+
+    const totalDeductions = totalTaxes + totalCustomDeductions;
+    const netPay = currentGross - totalDeductions;
+
+    set((state) => ({
+      calculatedTotals: {
+        ...state.calculatedTotals,
+        totalDeductions: parseFloat(totalDeductions.toFixed(2)),
+        netPay: parseFloat(netPay.toFixed(2))
+      }
+    }));
+  },
+
+  recalculateAll: () => {
+    const state = get();
+    const grossPay = state.calculateGrossPay();
+    const fica = state.calculateFICA(grossPay, state.calculatedTotals.ytdGross);
+    const fit = state.calculateFIT(grossPay, state.payPeriod.frequency, state.employeeDetails.maritalStatus);
+
+    set((state) => ({
+      calculatedTotals: {
+        ...state.calculatedTotals,
+        currentGross: grossPay,
+        taxes: {
+          ...state.calculatedTotals.taxes,
+          socialSecurity: fica.socialSecurity,
+          medicare: fica.medicare,
+          federalIncomeTax: fit
+        }
+      }
+    }));
+
+    get().recalculateNetPay();
+  }
+}));
