@@ -9,6 +9,7 @@ const Success = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
   const storeState = usePayStubStore();
 
@@ -17,6 +18,7 @@ const Success = () => {
       const sessionId = searchParams.get('session_id');
       
       if (!sessionId) {
+        setErrorMessage('No session ID found in the URL.');
         setStatus('failed');
         return;
       }
@@ -29,6 +31,10 @@ const Success = () => {
           body: JSON.stringify({ session_id: sessionId })
         });
 
+        if (!response.ok) {
+           throw new Error(`Verification API returned status ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (data.isPaid) {
@@ -39,10 +45,12 @@ const Success = () => {
           }
           setStatus('success');
         } else {
+          setErrorMessage(data.error || 'Payment was not marked as paid.');
           setStatus('failed');
         }
       } catch (e) {
         console.error("Verification Error:", e);
+        setErrorMessage(e.message || 'An error occurred during verification.');
         setStatus('failed');
       }
     };
@@ -63,13 +71,21 @@ const Success = () => {
         })
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PDF Generation API failed');
+      }
+
       const data = await response.json();
       if (data.success) {
         // In a real app, this would be a Blob download
         alert("PDF Generation Initiated. In a production environment, your download would start now.");
+      } else {
+        throw new Error(data.error || 'Unknown error occurred during PDF generation');
       }
     } catch (e) {
-      alert("Download failed. Please check your email for the backup copy.");
+      console.error("Download Error:", e);
+      alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
     } finally {
       setDownloading(false);
     }
@@ -99,7 +115,7 @@ const Success = () => {
         </div>
         <h2 className="text-4xl font-black tracking-tighter mb-4">VERIFICATION FAILED</h2>
         <p className="text-gray-400 max-w-md mx-auto mb-10 leading-relaxed">
-          We could not verify your payment session. If you believe this is an error, please contact our enterprise support team.
+          We could not verify your payment session. {errorMessage && <span className="block mt-2 text-red-400">{errorMessage}</span>} If you believe this is an error, please contact our enterprise support team.
         </p>
         <Link to="/app/generator" className="bg-white text-black font-bold px-10 py-5 rounded-2xl hover:bg-axim-teal transition-all">
           Return to Generator
@@ -125,7 +141,7 @@ const Success = () => {
 
         <h1 className="text-4xl font-black text-white mb-4 tracking-tight">ORDER COMPLETE</h1>
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
-          Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails.name || 'the employee'}</span> is now available for download.
+          Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>
 
         <div className="space-y-4">
