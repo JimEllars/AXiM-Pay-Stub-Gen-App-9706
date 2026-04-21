@@ -4,6 +4,7 @@ import DetailsSection from '../components/FormSections/DetailsSection';
 import FinancialsSection from '../components/FormSections/FinancialsSection';
 import PreviewSection from '../components/FormSections/PreviewSection';
 import SummaryCard from '../components/SummaryCard';
+import { usePayStubStore } from '../store/usePayStubStore';
 import PaymentModal from '../components/PaymentModal';
 
 const STEPS = [
@@ -15,6 +16,7 @@ const STEPS = [
 const Generator = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
+  const validateForm = usePayStubStore((state) => state.validateForm);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -48,7 +50,7 @@ const Generator = () => {
             {STEPS.map((step) => (
               <button 
                 key={step.id}
-                onClick={() => setCurrentStep(step.id)}
+                onClick={() => { if (step.id < currentStep || validateForm()) setCurrentStep(step.id); }}
                 className={`flex items-center gap-3 px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
                   currentStep === step.id 
                     ? 'bg-axim-teal/10 text-axim-teal border border-axim-teal/30' 
@@ -81,7 +83,8 @@ const Generator = () => {
             <div className="mt-10 flex justify-end">
               <button 
                 onClick={() => setCurrentStep(prev => Math.min(prev + 1, 3))}
-                className="bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-axim-teal hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all"
+                className="bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-axim-teal hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-none"
+                disabled={!validateForm()}
               >
                 Next Step
               </button>

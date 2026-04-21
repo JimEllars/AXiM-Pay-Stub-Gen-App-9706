@@ -17,6 +17,7 @@ const initialFormState = {
     { id: '1', type: 'Regular', hours: 40, rate: 0.00, currentTotal: 0.00, ytdTotal: 0.00 }
   ],
   customDeductions: [],
+  taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
   calculatedTotals: {
     currentGross: 0.00,
     ytdGross: 0.00,
@@ -30,6 +31,17 @@ export const usePayStubStore = create((set, get) => ({
   ...initialFormState,
 
   // PHASE 3: Re-hydration for Post-Checkout Workflow
+
+  validateForm: () => {
+    const state = get();
+    return !!(
+      state.employerDetails.name &&
+      state.employeeDetails.name &&
+      state.payPeriod.startDate &&
+      state.payPeriod.endDate
+    );
+  },
+
   hydrateStore: (data) => {
     if (!data) return;
     set({ ...data });
@@ -80,9 +92,15 @@ export const usePayStubStore = create((set, get) => ({
 
   updateTaxOverride: (taxType, amount) => {
     set((state) => ({
+      taxOverrides: { ...state.taxOverrides, [taxType]: true },
       calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(amount) || 0 } }
     }));
     get().recalculateNetPay();
+  },
+
+  resetTaxOverride: (taxType) => {
+    set((state) => ({ taxOverrides: { ...state.taxOverrides, [taxType]: false } }));
+    get().recalculateAll();
   },
 
   updateYtdGross: (amount) => {
@@ -142,13 +160,24 @@ export const usePayStubStore = create((set, get) => ({
   recalculateAll: () => {
     const state = get();
     const grossPay = state.calculateGrossPay();
-    const fica = state.calculateFICA(grossPay, state.calculatedTotals.ytdGross);
+    let parsedYtd = state.calculatedTotals.ytdGross;
+    if (parsedYtd < grossPay) {
+      parsedYtd = grossPay;
+      set((s) => ({ calculatedTotals: { ...s.calculatedTotals, ytdGross: grossPay } }));
+    }
+    const fica = state.calculateFICA(grossPay, parsedYtd);
     const fit = state.calculateFIT(grossPay, state.payPeriod.frequency, state.employeeDetails.maritalStatus);
+
     set((state) => ({
       calculatedTotals: {
         ...state.calculatedTotals,
         currentGross: grossPay,
-        taxes: { ...state.calculatedTotals.taxes, socialSecurity: fica.socialSecurity, medicare: fica.medicare, federalIncomeTax: fit }
+        taxes: {
+          ...state.calculatedTotals.taxes,
+          socialSecurity: state.taxOverrides.socialSecurity ? state.calculatedTotals.taxes.socialSecurity : fica.socialSecurity,
+          medicare: state.taxOverrides.medicare ? state.calculatedTotals.taxes.medicare : fica.medicare,
+          federalIncomeTax: state.taxOverrides.federalIncomeTax ? state.calculatedTotals.taxes.federalIncomeTax : fit
+        }
       }
     }));
     get().recalculateNetPay();

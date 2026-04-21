@@ -1,13 +1,13 @@
 import React from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import SafeIcon from '../../common/SafeIcon';
-import { FiPlus, FiTrash2, FiInfo, FiTrendingUp, FiCreditCard } from 'react-icons/fi';
+import { FiPlus, FiTrash2, FiInfo, FiTrendingUp, FiCreditCard, FiRefreshCw } from 'react-icons/fi';
 
 const FinancialsSection = () => {
   const { 
     earnings, addEarning, updateEarning, removeEarning, 
     customDeductions, addCustomDeduction, updateCustomDeduction, removeCustomDeduction,
-    calculatedTotals, updateTaxOverride, updateYtdGross 
+    calculatedTotals, taxOverrides, updateTaxOverride, resetTaxOverride, updateYtdGross
   } = usePayStubStore();
 
   return (
@@ -149,14 +149,14 @@ const FinancialsSection = () => {
             stateIncomeTax: 'State Tax'
           }).map(([key, label]) => (
             <div key={key} className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>
+              <div className="flex justify-between items-center mb-1.5"><label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>{taxOverrides[key] && <button onClick={() => resetTaxOverride(key)} className="text-[9px] text-axim-gold hover:text-white flex items-center gap-1 transition-colors"><SafeIcon icon={FiRefreshCw} size={10} /> Reset</button>}</div>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs">$</span>
                 <input 
                   type="number" step="0.01"
                   value={calculatedTotals.taxes[key] || ''}
                   onChange={(e) => updateTaxOverride(key, e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono"
+                  className={`w-full bg-black/50 border ${taxOverrides[key] ? 'border-axim-gold/50' : 'border-white/10'} rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono transition-all`}
                 />
               </div>
             </div>
