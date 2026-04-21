@@ -192,68 +192,82 @@ export default {
 
         currentY -= 40;
         // Tables Header
-        drawText('INCOME', 50, currentY, 12, true);
-        drawText('DEDUCTIONS & TAXES', 350, currentY, 12, true);
+        drawText('DESCRIPTION', 50, currentY, 12, true);
+        drawText('CURRENT', 250, currentY, 12, true);
+        drawText('YTD', 350, currentY, 12, true);
 
         currentY -= 10;
         page.drawLine({ start: { x: 50, y: currentY }, end: { x: 550, y: currentY }, thickness: 1, color: rgb(0.8, 0.8, 0.8) });
 
         currentY -= 20;
 
-        // Income / Deductions rows
-        let leftY = currentY;
-        let rightY = currentY;
+        let rowY = currentY;
+
+        // YTD Estimator Ratio
+        const currentGross = calculatedTotals?.currentGross || 0;
+        const ytdGross = calculatedTotals?.ytdGross || 0;
+        const ytdRatio = currentGross > 0 ? (ytdGross / currentGross) : 1;
 
         // Earnings
+        drawText('EARNINGS', 50, rowY, 10, true);
+        rowY -= 15;
         if (earnings && Array.isArray(earnings)) {
           earnings.forEach(e => {
-            drawText(`${e.type} (${e.hours}h)`, 50, leftY);
-            drawText(`${(e.currentTotal || 0).toFixed(2)}`, 250, leftY);
-            leftY -= 15;
+            drawText(`${e.type} (${e.hours}h)`, 50, rowY);
+            drawText(`${(e.currentTotal || 0).toFixed(2)}`, 250, rowY);
+            drawText(`${(e.ytdTotal || 0).toFixed(2)}`, 350, rowY);
+            rowY -= 15;
           });
         }
 
-        leftY -= 10;
-        drawText('Gross Pay:', 50, leftY, 10, true);
-        drawText(`${(calculatedTotals?.currentGross || 0).toFixed(2)}`, 250, leftY, 10, true);
+        rowY -= 5;
+        drawText('Gross Pay:', 50, rowY, 10, true);
+        drawText(`${(currentGross).toFixed(2)}`, 250, rowY, 10, true);
+        drawText(`${(ytdGross).toFixed(2)}`, 350, rowY, 10, true);
 
-        // Deductions
+        rowY -= 25;
+
+        // Deductions & Taxes
+        drawText('TAXES & DEDUCTIONS', 50, rowY, 10, true);
+        rowY -= 15;
+
         const taxes = calculatedTotals?.taxes || {};
-        drawText('Social Security:', 350, rightY);
-        drawText(`${(taxes.socialSecurity || 0).toFixed(2)}`, 500, rightY);
-        rightY -= 15;
 
-        drawText('Medicare:', 350, rightY);
-        drawText(`${(taxes.medicare || 0).toFixed(2)}`, 500, rightY);
-        rightY -= 15;
+        const drawDeductionRow = (label, currentVal, customYtd) => {
+           drawText(label, 50, rowY);
+           drawText(`${(currentVal || 0).toFixed(2)}`, 250, rowY);
+           const ytdVal = customYtd !== undefined ? customYtd : (currentVal * ytdRatio);
+           drawText(`${(ytdVal || 0).toFixed(2)}`, 350, rowY);
+           rowY -= 15;
+        };
 
-        drawText('Federal Income Tax:', 350, rightY);
-        drawText(`${(taxes.federalIncomeTax || 0).toFixed(2)}`, 500, rightY);
-        rightY -= 15;
+        drawDeductionRow('Social Security Tax:', taxes.socialSecurity);
+        drawDeductionRow('Medicare Tax:', taxes.medicare);
+        drawDeductionRow('Federal Income Tax:', taxes.federalIncomeTax);
 
         if (taxes.stateIncomeTax > 0) {
-          drawText('State Income Tax:', 350, rightY);
-          drawText(`${(taxes.stateIncomeTax || 0).toFixed(2)}`, 500, rightY);
-          rightY -= 15;
+          drawDeductionRow('State Income Tax:', taxes.stateIncomeTax);
         }
 
         if (customDeductions && Array.isArray(customDeductions)) {
           customDeductions.forEach(d => {
-            drawText(d.name || 'Deduction', 350, rightY);
-            drawText(`${(d.amount || 0).toFixed(2)}`, 500, rightY);
-            rightY -= 15;
+            // customDeductions don't typically have a ytd in the provided code, but we'll estimate if missing
+            drawDeductionRow(d.name || 'Deduction', d.amount, d.ytd);
           });
         }
 
-        rightY -= 10;
-        drawText('Total Deductions:', 350, rightY, 10, true);
-        drawText(`${(calculatedTotals?.totalDeductions || 0).toFixed(2)}`, 500, rightY, 10, true);
+        rowY -= 5;
+        drawText('Total Deductions:', 50, rowY, 10, true);
+        const totalDeductionsCurrent = calculatedTotals?.totalDeductions || 0;
+        drawText(`${(totalDeductionsCurrent).toFixed(2)}`, 250, rowY, 10, true);
+        drawText(`${(totalDeductionsCurrent * ytdRatio).toFixed(2)}`, 350, rowY, 10, true);
 
-        const finalY = Math.min(leftY, rightY) - 40;
+        const finalY = rowY - 40;
         page.drawLine({ start: { x: 50, y: finalY + 20 }, end: { x: 550, y: finalY + 20 }, thickness: 1, color: rgb(0.8, 0.8, 0.8) });
 
-        drawText('NET PAY:', 350, finalY, 14, true);
-        drawText(`${(calculatedTotals?.netPay || 0).toFixed(2)}`, 450, finalY, 14, true);
+        drawText('NET PAY:', 250, finalY, 14, true);
+        const netPayCurrent = calculatedTotals?.netPay || 0;
+        drawText(`${(netPayCurrent).toFixed(2)}`, 350, finalY, 14, true);
 
         const pdfBytes = await pdfDoc.save();
 
@@ -269,6 +283,104 @@ export default {
         return new Response(JSON.stringify({ error: "Generation Failed: " + err.message }), {
           status: 500, 
           headers: corsHeaders 
+        });
+      }
+    }
+
+
+
+    /**
+     * PHASE 5: Email Orchestration
+     */
+    if (url.pathname === '/api/send-email' && request.method === 'POST') {
+      try {
+        const { session_id, email, formData } = await request.json();
+
+        if (!session_id || !email || !formData) {
+           throw new Error("Missing session_id, email, or formData");
+        }
+
+        // Verify session_id belongs to a paid transaction
+        const verifyResponse = await fetch(`${apiBase}/functions/verify-session`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.AXIM_API_KEY}`,
+          },
+          body: JSON.stringify({ session_id }),
+        });
+
+        if (!verifyResponse.ok) {
+           throw new Error("Verification gateway failure during email orchestration.");
+        }
+
+        const status = await verifyResponse.json();
+        if (!status.isPaid) {
+           return new Response(JSON.stringify({ error: "Payment not verified." }), {
+             status: 402,
+             headers: corsHeaders
+           });
+        }
+
+        // Proxy to AXiM Core Document Orchestrator
+        const emailResponse = await fetch(`${apiBase}/functions/document-orchestrator`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.AXIM_API_KEY}`,
+          },
+          body: JSON.stringify({
+            session_id,
+            email,
+            documentType: 'pay_stub',
+            formData
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          const errorData = await emailResponse.text();
+          throw new Error(`Orchestrator returned ${emailResponse.status}: ${errorData}`);
+        }
+
+        const data = await emailResponse.json();
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: "Email Dispatch Failed: " + err.message }), {
+          status: 500,
+          headers: corsHeaders
+        });
+      }
+    }
+
+    /**
+     * PHASE 6: Telemetry Proxy
+     */
+    if (url.pathname === '/api/v1/telemetry/ingest' && request.method === 'POST') {
+      try {
+        const payload = await request.json();
+
+        // Proxy to AXiM Core Telemetry
+        // Fire and forget or await, but return success locally quickly
+        ctx.waitUntil(
+          fetch(`${apiBase}/telemetry/ingest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${env.AXIM_API_KEY}`,
+            },
+            body: JSON.stringify(payload),
+          }).catch(e => console.error("Telemetry failed:", e))
+        );
+
+        return new Response(JSON.stringify({ status: 'queued' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: "Telemetry Error: " + err.message }), {
+          status: 500,
+          headers: corsHeaders
         });
       }
     }

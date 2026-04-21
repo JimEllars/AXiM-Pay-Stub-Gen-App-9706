@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
-import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle, FiMail, FiSend } from 'react-icons/fi';
 import { usePayStubStore } from '../store/usePayStubStore';
 
 const Success = () => {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailInput, setEmailInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
   const storeState = usePayStubStore();
@@ -40,10 +42,38 @@ const Success = () => {
         if (data.isPaid) {
           // PHASE 3: Re-hydrate State
           const rawDraft = sessionStorage.getItem('paystub_draft_data');
+          let parsedDraft = null;
           if (rawDraft) {
-            hydrateStore(JSON.parse(rawDraft));
+            parsedDraft = JSON.parse(rawDraft);
+            hydrateStore(parsedDraft);
           }
+
           setStatus('success');
+
+          // Telemetry Sync
+          fetch('/api/v1/telemetry/ingest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event: "document_generated", type: "pay_stub", session_id: sessionId })
+          }).catch(console.error);
+
+          if (window.dataLayer) {
+             window.dataLayer.push({ event: "document_generated", type: "pay_stub", session_id: sessionId });
+          }
+
+          // Automatic Email Dispatch
+          const savedEmail = sessionStorage.getItem('paystub_delivery_email');
+          if (savedEmail && parsedDraft) {
+             fetch('/api/send-email', {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({
+                 session_id: sessionId,
+                 email: savedEmail,
+                 formData: parsedDraft
+               })
+             }).catch(console.error);
+          }
         } else {
           setErrorMessage(data.error || 'Payment was not marked as paid.');
           setStatus('failed');
@@ -160,7 +190,12 @@ const Success = () => {
             className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-[0_0_40px_rgba(0,229,255,0.2)]"
           >
             {downloading ? (
-              <span className="animate-pulse">Generating Secure PDF...</span>
+              <div className="flex items-center gap-3">
+                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                    <SafeIcon icon={FiLoader} />
+                 </motion.div>
+                 <span>Generating Secure PDF...</span>
+              </div>
             ) : (
               <>
                 <SafeIcon icon={FiDownload} />
@@ -169,7 +204,54 @@ const Success = () => {
             )}
           </button>
           
-          <Link to="/" className="block w-full text-gray-500 font-bold py-4 hover:text-white transition-all uppercase tracking-widest text-[10px]">
+          <div className="mt-8 pt-8 border-t border-white/10">
+            <p className="text-xs text-gray-500 mb-4 uppercase tracking-widest font-bold">Email My Document</p>
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="name@company.com"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-axim-teal transition-all font-mono text-sm"
+              />
+              <button
+                onClick={async () => {
+                  if (!emailInput) return;
+                  setIsSendingEmail(true);
+                  try {
+                    const res = await fetch('/api/send-email', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        session_id: searchParams.get('session_id'),
+                        email: emailInput,
+                        formData: storeState
+                      })
+                    });
+                    if (!res.ok) throw new Error("Failed to send email");
+                    alert("Email sent successfully!");
+                    setEmailInput('');
+                  } catch (e) {
+                    alert("Error sending email: " + e.message);
+                  } finally {
+                    setIsSendingEmail(false);
+                  }
+                }}
+                disabled={isSendingEmail || !emailInput}
+                className="bg-white/10 hover:bg-axim-teal hover:text-black text-white px-6 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
+              >
+                {isSendingEmail ? (
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                    <SafeIcon icon={FiLoader} />
+                  </motion.div>
+                ) : (
+                  <SafeIcon icon={FiSend} />
+                )}
+              </button>
+            </div>
+          </div>
+
+          <Link to="/" className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-[10px]">
             Return to Dashboard
           </Link>
         </div>
