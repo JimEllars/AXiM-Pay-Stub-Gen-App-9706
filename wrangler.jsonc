@@ -3,6 +3,14 @@
   "main": "worker.js",
   "compatibility_date": "2024-02-28",
   "vars": {
-    "ENVIRONMENT": "production"
+    "ENVIRONMENT": "production",
+    "AXIM_API_BASE": "https://api.axim.us.com/v1"
+  },
+  "env": {
+    "production": {
+      "routes": [
+        { "pattern": "api.axim.us.com/api/*", "zone_name": "axim.us.com" }
+      ]
+    }
   }
 }
