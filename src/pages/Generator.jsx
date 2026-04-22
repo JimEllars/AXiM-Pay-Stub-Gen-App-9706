@@ -43,7 +43,7 @@ const Generator = () => {
       <div className="max-w-7xl mx-auto px-4 py-12 md:py-20 lg:flex lg:gap-12">
         
         {/* Left Column - Form Content (70%) */}
-        <div className="lg:w-[70%] mb-12 lg:mb-0">
+        <div className="lg:w-[70%] mb-24 lg:mb-0">
           
           {/* Step Navigation */}
           <div className="flex items-center gap-4 mb-10 border-b border-white/10 pb-6 overflow-x-auto">
