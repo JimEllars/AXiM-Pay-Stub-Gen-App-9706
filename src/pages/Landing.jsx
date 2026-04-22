@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
-import { FiArrowRight, FiShield, FiCpu, FiFileText } from 'react-icons/fi';
+import { FiArrowRight, FiShield, FiCpu, FiFileText, FiUser } from 'react-icons/fi';
+import { usePayStubStore } from '../store/usePayStubStore';
 
 const Landing = () => {
+  const userProfile = usePayStubStore(state => state.userProfile);
   return (
     <div className="min-h-screen bg-bg-void text-white font-sans selection:bg-axim-teal selection:text-black overflow-hidden">
       {/* Background Grid Pattern */}
@@ -24,9 +26,21 @@ const Landing = () => {
           <a href="#" className="hover:text-axim-teal transition-colors">Compliance</a>
           <a href="#" className="hover:text-axim-teal transition-colors">Pricing</a>
         </div>
-        <Link to="/app/generator" className="bg-white/5 border border-white/10 px-5 py-2 rounded-full text-sm font-bold hover:bg-white/10 transition-all">
-          Client Login
-        </Link>
+        {userProfile ? (
+          <div className="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-full">
+            <div className="w-6 h-6 bg-axim-teal/20 rounded-full flex items-center justify-center text-axim-teal">
+              <SafeIcon icon={FiUser} size={14} />
+            </div>
+            <span className="text-sm font-bold text-white">{userProfile.email}</span>
+            <Link to="/app/generator" className="ml-4 text-xs font-bold text-axim-teal hover:text-white transition-colors">
+              Dashboard &rarr;
+            </Link>
+          </div>
+        ) : (
+          <Link to="/app/generator" className="bg-white/5 border border-white/10 px-5 py-2 rounded-full text-sm font-bold hover:bg-white/10 transition-all">
+            Client Login
+          </Link>
+        )}
       </nav>
 
       {/* Hero Section */}

@@ -3,11 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import { FiX, FiLock } from 'react-icons/fi';
 import { usePayStubStore } from '../store/usePayStubStore';
+import { useNavigate } from 'react-router-dom';
 
 const PaymentModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const storeState = usePayStubStore();
+  const navigate = useNavigate();
+  const passportToken = usePayStubStore(state => state.passportToken);
 
   const handlePayment = async () => {
     if (!email) {
@@ -33,8 +36,36 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
     sessionStorage.setItem('paystub_draft_data', JSON.stringify(stateToStore));
 
+
     try {
+      if (passportToken) {
+        // B2B Paywall Bypass
+        const creditResponse = await fetch('/api/consume-credit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${passportToken}`
+          },
+          body: JSON.stringify({ documentType: "pay_stub_v1" })
+        });
+
+        if (!creditResponse.ok) {
+           if (creditResponse.status === 402) {
+              throw new Error("Out of Credits. Please upgrade your AXiM Enterprise subscription.");
+           }
+           const errorData = await creditResponse.json().catch(() => ({}));
+           throw new Error(errorData.error || `Failed to consume credit. Status: ${creditResponse.status}`);
+        }
+
+        const { receipt } = await creditResponse.json();
+        const dummySessionId = receipt || 'b2b_' + Math.random().toString(36).substring(2, 15);
+
+        navigate(`/success?session_id=${dummySessionId}`);
+        return;
+      }
+
       const response = await fetch('/api/create-checkout-session', {
+
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

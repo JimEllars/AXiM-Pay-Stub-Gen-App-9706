@@ -107,6 +107,7 @@ export default {
     if (url.pathname === '/api/generate-paystub' && request.method === 'POST') {
       try {
         const { session_id, formData } = await request.json();
+        const authHeader = request.headers.get('Authorization');
 
         if (!session_id || !formData) {
            throw new Error("Missing session_id or formData");
@@ -315,6 +316,22 @@ export default {
         drawText(`Generated: ${generationTime}`, 100, 20, 8, false);
         const pdfBytes = await pdfDoc.save();
 
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const passportToken = authHeader.split(' ')[1];
+          ctx.waitUntil(
+            fetch('https://api.axim.us.com/v1/vault/upload', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/pdf',
+                'Authorization': `Bearer ${passportToken}`,
+                'X-Document-Type': 'pay_stub',
+                'X-Session-ID': session_id
+              },
+              body: pdfBytes
+            }).catch(e => console.error("Vault sync failed:", e))
+          );
+        }
+
         // 3. Return PDF stream
         return new Response(pdfBytes, {
           headers: {
@@ -429,6 +446,57 @@ export default {
       }
     }
 
+
+    /**
+     * PHASE 7: Credit Consumption Proxy
+     */
+    if (url.pathname === '/api/consume-credit' && request.method === 'POST') {
+      try {
+        const authHeader = request.headers.get('Authorization');
+        if (!authHeader) {
+          return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+            status: 401,
+            headers: corsHeaders
+          });
+        }
+
+        const passportToken = authHeader.split(' ')[1];
+
+        // Proxy to AXiM Core billing engine
+        const billingResponse = await fetch(`${apiBase}/billing/consume`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${passportToken}`,
+            'X-Internal-Key': env.AXIM_API_KEY
+          },
+          body: JSON.stringify({ action: "generate_pay_stub" })
+        });
+
+        if (!billingResponse.ok) {
+           if (billingResponse.status === 402) {
+              return new Response(JSON.stringify({ error: "Out of Credits." }), {
+                 status: 402,
+                 headers: corsHeaders
+              });
+           }
+           const errorData = await billingResponse.text();
+           throw new Error(`Billing engine returned ${billingResponse.status}: ${errorData}`);
+        }
+
+        const data = await billingResponse.json();
+        return new Response(JSON.stringify(data), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: "Credit Consumption Failed: " + err.message }), {
+          status: 500,
+          headers: corsHeaders
+        });
+      }
+    }
+
     return new Response('AXiM Systems Proxy: Endpoint Not Found', { status: 404, headers: corsHeaders });
+
   }
 };

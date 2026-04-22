@@ -25,8 +25,22 @@ const Success = () => {
         return;
       }
 
+
+      if (sessionId.startsWith('b2b_') || sessionId.startsWith('rcpt_')) {
+        // B2B bypass - mock verification
+        const rawDraft = sessionStorage.getItem('paystub_draft_data');
+        let parsedDraft = null;
+        if (rawDraft) {
+          parsedDraft = JSON.parse(rawDraft);
+          hydrateStore(parsedDraft);
+        }
+        setStatus('success');
+        return;
+      }
+
       try {
         // PHASE 2: Secure Verification Proxy
+
         const response = await fetch('/api/verify-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -92,9 +106,14 @@ const Success = () => {
     setDownloading(true);
     try {
       // PHASE 4: Request Secure Edge PDF Generation
+      const passportToken = sessionStorage.getItem('passportToken');
+      const headers = { 'Content-Type': 'application/json' };
+      if (passportToken) {
+        headers['Authorization'] = `Bearer ${passportToken}`;
+      }
       const response = await fetch('/api/generate-paystub', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           session_id: searchParams.get('session_id'),
           formData: storeState

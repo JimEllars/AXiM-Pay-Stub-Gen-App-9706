@@ -17,6 +17,8 @@ const initialFormState = {
     { id: '1', type: 'Regular', hours: 40, rate: 0.00, currentTotal: 0.00, ytdTotal: 0.00 }
   ],
   customDeductions: [],
+  passportToken: null,
+  userProfile: null,
   taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
   calculatedTotals: {
     currentGross: 0.00,
@@ -41,6 +43,9 @@ export const usePayStubStore = create((set, get) => ({
       state.payPeriod.endDate
     );
   },
+
+  setAuth: (token, profile) => set({ passportToken: token, userProfile: profile }),
+  clearAuth: () => set({ passportToken: null, userProfile: null }),
 
   hydrateStore: (data) => {
     if (!data) return;
