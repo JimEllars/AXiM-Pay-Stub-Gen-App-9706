@@ -26,18 +26,6 @@ const Success = () => {
       }
 
 
-      if (sessionId.startsWith('b2b_') || sessionId.startsWith('rcpt_')) {
-        // B2B bypass - mock verification
-        const rawDraft = sessionStorage.getItem('paystub_draft_data');
-        let parsedDraft = null;
-        if (rawDraft) {
-          parsedDraft = JSON.parse(rawDraft);
-          hydrateStore(parsedDraft);
-        }
-        setStatus('success');
-        return;
-      }
-
       try {
         // PHASE 2: Secure Verification Proxy
 
@@ -55,7 +43,7 @@ const Success = () => {
 
         if (data.isPaid) {
           // PHASE 3: Re-hydrate State
-          const rawDraft = sessionStorage.getItem('paystub_draft_data');
+          const rawDraft = sessionStorage.getItem('axim_paystub_draft');
           let parsedDraft = null;
           if (rawDraft) {
             parsedDraft = JSON.parse(rawDraft);
@@ -63,17 +51,6 @@ const Success = () => {
           }
 
           setStatus('success');
-
-          // Telemetry Sync
-          fetch('/api/v1/telemetry/ingest', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event: "document_generated", type: "pay_stub", session_id: sessionId })
-          }).catch(console.error);
-
-          if (window.dataLayer) {
-             window.dataLayer.push({ event: "document_generated", type: "pay_stub", session_id: sessionId });
-          }
 
           // Automatic Email Dispatch
           const savedEmail = sessionStorage.getItem('paystub_delivery_email');
@@ -106,12 +83,8 @@ const Success = () => {
     setDownloading(true);
     try {
       // PHASE 4: Request Secure Edge PDF Generation
-      const passportToken = sessionStorage.getItem('passportToken');
-      const headers = { 'Content-Type': 'application/json' };
-      if (passportToken) {
-        headers['Authorization'] = `Bearer ${passportToken}`;
-      }
-      const response = await fetch('/api/generate-paystub', {
+            const headers = { 'Content-Type': 'application/json' };
+            const response = await fetch('/api/generate-paystub', {
         method: 'POST',
         headers,
         body: JSON.stringify({
@@ -132,7 +105,7 @@ const Success = () => {
         throw new Error(errorMessage);
       }
 
-      const blob = await response.blob();
+            const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -141,6 +114,17 @@ const Success = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
+
+      // Telemetry Sync
+      fetch('/api/v1/telemetry/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: "document_generated", type: "pay_stub", session_id: searchParams.get('session_id') })
+      }).catch(console.error);
+
+      if (window.dataLayer) {
+         window.dataLayer.push({ event: "document_generated", type: "pay_stub", session_id: searchParams.get('session_id') });
+      }
     } catch (e) {
       console.error("Download Error:", e);
       alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
