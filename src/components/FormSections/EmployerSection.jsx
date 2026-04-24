@@ -23,9 +23,20 @@ const EmployerSection = () => {
         <h2 className="text-lg font-bold text-axim-teal mb-4 uppercase tracking-wider">Employer Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Company Name" value={employerDetails.name} required error={!employerDetails.name} onChange={(v) => updateEmployer('name', v)} placeholder="Acme Corp" />
-          <InputField label="EIN (Employer ID)" value={employerDetails.ein} onChange={(v) => updateEmployer('ein', v)} placeholder="XX-XXXXXXX" />
-          <div className="md:col-span-2">
-            <InputField label="Company Address" value={employerDetails.address} onChange={(v) => updateEmployer('address', v)} placeholder="123 Business Rd, City, ST 12345" />
+          <InputField label="EIN (Employer ID)" value={employerDetails.ein} onChange={(v) => {
+            const numbers = v.replace(/\D/g, '');
+            let formatted = numbers;
+            if (numbers.length > 2) {
+              formatted = `${numbers.slice(0, 2)}-${numbers.slice(2, 9)}`;
+            }
+            updateEmployer('ein', formatted.slice(0, 10));
+          }} placeholder="XX-XXXXXXX" />
+          <div className="md:col-span-2 grid grid-cols-[1fr_120px] gap-4">
+            <InputField label="Company Address" value={employerDetails.address} onChange={(v) => updateEmployer('address', v)} placeholder="123 Business Rd, City, ST" />
+            <InputField label="ZIP Code" value={employerDetails.zipCode || ''} onChange={(v) => {
+              const numbers = v.replace(/\D/g, '');
+              updateEmployer('zipCode', numbers.slice(0, 5));
+            }} placeholder="12345" />
           </div>
         </div>
       </div>

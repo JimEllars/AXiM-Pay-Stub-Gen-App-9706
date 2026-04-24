@@ -10,6 +10,7 @@ const Success = () => {
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [autoDownloaded, setAutoDownloaded] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
@@ -80,6 +81,15 @@ const Success = () => {
 
     verifyPayment();
   }, [searchParams, hydrateStore]);
+
+
+  useEffect(() => {
+    if (status === 'success' && !downloading && !autoDownloaded) {
+      setAutoDownloaded(true);
+      handleDownload();
+    }
+  }, [status]);
+
 
   const handleDownload = async () => {
     setDownloading(true);
@@ -199,7 +209,7 @@ const Success = () => {
                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
                     <SafeIcon icon={FiLoader} />
                  </motion.div>
-                 <span>Generating Secure PDF...</span>
+                 <span>Success! Your document is downloading...</span>
               </div>
             ) : (
               <>

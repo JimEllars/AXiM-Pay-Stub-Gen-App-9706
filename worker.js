@@ -44,7 +44,7 @@ export default {
            throw new Error("Missing API Key");
         }
 
-        // Proxy to AXiM Core Billing Engine
+                // Proxy to AXiM Core Billing Engine
         const stripeResponse = await fetch(`${apiBase}/functions/create-checkout-session`, {
           method: 'POST',
           headers: {
@@ -53,9 +53,21 @@ export default {
           },
           body: JSON.stringify({
             productId: body.productId,
+            line_items: [
+              {
+                price_data: {
+                  currency: 'usd',
+                  product_data: {
+                    name: 'AXiM Pay Stub Generation',
+                  },
+                  unit_amount: 400,
+                },
+                quantity: 1,
+              },
+            ],
             metadata: body.metadata,
-            success_url: `${origin}/#/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${origin}/#/app/generator`,
+            success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${origin}/app/generator`,
           }),
         });
 
@@ -175,7 +187,7 @@ export default {
         // Header
         drawText(employerDetails?.name || 'Company Name', 50, currentY, 18, true);
         currentY -= 20;
-        drawText(employerDetails?.address || 'Company Address', 50, currentY);
+        drawText((employerDetails?.address || 'Company Address') + (employerDetails?.zipCode ? ` ${employerDetails.zipCode}` : ''), 50, currentY);
         currentY -= 15;
         if (employerDetails?.ein) {
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -194,14 +206,21 @@ export default {
 
         currentY -= 30;
         // Employee Details (Left) and Pay Period (Right)
-        drawText('Employee:', 50, currentY, 10, true);
+                drawText('Employee:', 50, currentY, 10, true);
         drawText(employeeDetails?.name || 'Employee Name', 120, currentY);
         drawText('Pay Frequency:', 350, currentY, 10, true);
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
         currentY -= 15;
+        if (employeeDetails?.ssnLast4) {
+          drawText('SSN:', 50, currentY, 10, true);
+          drawText(`XXX-XX-${employeeDetails.ssnLast4}`, 120, currentY);
+          currentY -= 15;
+        }
+
+        currentY -= 15;
         drawText('Address:', 50, currentY, 10, true);
-        drawText(employeeDetails?.address || 'N/A', 120, currentY);
+        drawText((employeeDetails?.address || 'N/A') + (employeeDetails?.zipCode ? ` ${employeeDetails.zipCode}` : ''), 120, currentY);
         drawText('Period:', 350, currentY, 10, true);
         drawText(`${payPeriod?.startDate || 'N/A'} - ${payPeriod?.endDate || 'N/A'}`, 450, currentY);
 
@@ -432,7 +451,7 @@ export default {
         // Header
         drawText(employerDetails?.name || 'Company Name', 50, currentY, 18, true);
         currentY -= 20;
-        drawText(employerDetails?.address || 'Company Address', 50, currentY);
+        drawText((employerDetails?.address || 'Company Address') + (employerDetails?.zipCode ? ` ${employerDetails.zipCode}` : ''), 50, currentY);
         currentY -= 15;
         if (employerDetails?.ein) {
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -451,14 +470,21 @@ export default {
 
         currentY -= 30;
         // Employee Details (Left) and Pay Period (Right)
-        drawText('Employee:', 50, currentY, 10, true);
+                drawText('Employee:', 50, currentY, 10, true);
         drawText(employeeDetails?.name || 'Employee Name', 120, currentY);
         drawText('Pay Frequency:', 350, currentY, 10, true);
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
         currentY -= 15;
+        if (employeeDetails?.ssnLast4) {
+          drawText('SSN:', 50, currentY, 10, true);
+          drawText(`XXX-XX-${employeeDetails.ssnLast4}`, 120, currentY);
+          currentY -= 15;
+        }
+
+        currentY -= 15;
         drawText('Address:', 50, currentY, 10, true);
-        drawText(employeeDetails?.address || 'N/A', 120, currentY);
+        drawText((employeeDetails?.address || 'N/A') + (employeeDetails?.zipCode ? ` ${employeeDetails.zipCode}` : ''), 120, currentY);
         drawText('Period:', 350, currentY, 10, true);
         drawText(`${payPeriod?.startDate || 'N/A'} - ${payPeriod?.endDate || 'N/A'}`, 450, currentY);
 
@@ -608,6 +634,22 @@ export default {
             body: vaultFormData
           }).catch(e => console.error("Vault upload failed:", e))
         );
+        ctx.waitUntil(
+          fetch(`${apiBase}/telemetry/ingest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+            },
+            body: JSON.stringify({
+              event: "revenue_generated",
+              app_type: "pay_stub",
+              amount: 4.00,
+              currency: "usd"
+            })
+          }).catch(e => console.error("Telemetry sync failed:", e))
+        );
+
 
 
 

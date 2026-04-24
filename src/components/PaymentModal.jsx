@@ -126,7 +126,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
                 <p className="text-xs text-gray-400 font-medium">Professional Pay Stub</p>
                 <p className="text-[10px] text-gray-600 uppercase tracking-widest mt-1">One-time Generation</p>
               </div>
-              <span className="text-axim-gold font-mono font-black text-2xl">$9.99</span>
+              <span className="text-axim-gold font-mono font-black text-2xl">$4.00</span>
             </div>
 
             <button 
