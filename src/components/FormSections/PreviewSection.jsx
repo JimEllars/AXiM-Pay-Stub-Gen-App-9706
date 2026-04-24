@@ -147,8 +147,33 @@ const PreviewSection = ({ onFinalize }) => {
         <div className="text-sm text-gray-400 font-light max-w-sm">
           Once finalized, you will be redirected to our secure payment gateway to unlock the unmarked, high-resolution PDF.
         </div>
+
+        <button
+          onClick={async () => {
+            const formData = usePayStubStore.getState();
+            try {
+              const res = await fetch('/api/generate-preview', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ formData })
+              });
+              if (!res.ok) throw new Error("Preview generation failed");
+              const blob = await res.blob();
+              const url = window.URL.createObjectURL(blob);
+              window.open(url, '_blank');
+              setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+            } catch (err) {
+              alert("Failed to generate preview: " + err.message);
+            }
+          }}
+          className="group w-full sm:w-auto bg-transparent border border-axim-teal text-axim-teal font-black px-10 py-5 rounded-2xl hover:bg-axim-teal hover:text-bg-void transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(0,229,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!validateForm()}
+        >
+          Preview Draft
+        </button>
         <button 
           onClick={onFinalize}
+
           className="group w-full sm:w-auto bg-axim-teal text-bg-void font-black px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-axim-teal"
           disabled={!validateForm()}
         >

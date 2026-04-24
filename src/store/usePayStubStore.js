@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { PAY_FREQUENCIES, STANDARD_DEDUCTION_2024 } from '../utils/constants';
 
 const TAX_RATES = {
@@ -27,7 +28,7 @@ const initialFormState = {
   }
 };
 
-export const usePayStubStore = create((set, get) => ({
+export const usePayStubStore = create(persist((set, get) => ({
   ...initialFormState,
 
   // PHASE 3: Re-hydration for Post-Checkout Workflow
@@ -230,4 +231,6 @@ addEarning: () => set((state) => ({
     }));
     get().recalculateNetPay();
   }
+}), {
+  name: 'axim_paystub_draft_continuous',
 }));

@@ -52,6 +52,8 @@ const Success = () => {
 
           setStatus('success');
 
+          localStorage.removeItem('axim_paystub_draft_continuous');
+
           // Automatic Email Dispatch
           const savedEmail = sessionStorage.getItem('paystub_delivery_email');
           if (savedEmail && parsedDraft) {
