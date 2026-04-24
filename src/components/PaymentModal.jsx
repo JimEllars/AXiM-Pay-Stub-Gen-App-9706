@@ -10,7 +10,13 @@ const PaymentModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const storeState = usePayStubStore();
   const navigate = useNavigate();
-  const passportToken = usePayStubStore(state => state.passportToken);
+
+  const isValid =
+    storeState.employerDetails?.name?.trim() !== '' &&
+    storeState.employeeDetails?.name?.trim() !== '' &&
+    storeState.payPeriod?.startDate?.trim() !== '' &&
+    storeState.calculatedTotals?.currentGross > 0;
+
 
   const handlePayment = async () => {
     if (!email) {
@@ -34,36 +40,10 @@ const PaymentModal = ({ isOpen, onClose }) => {
       calculatedTotals: storeState.calculatedTotals
     };
 
-    sessionStorage.setItem('paystub_draft_data', JSON.stringify(stateToStore));
+    sessionStorage.setItem('axim_paystub_draft', JSON.stringify(stateToStore));
 
 
     try {
-      if (passportToken) {
-        // B2B Paywall Bypass
-        const creditResponse = await fetch('/api/consume-credit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${passportToken}`
-          },
-          body: JSON.stringify({ documentType: "pay_stub_v1" })
-        });
-
-        if (!creditResponse.ok) {
-           if (creditResponse.status === 402) {
-              throw new Error("Out of Credits. Please upgrade your AXiM Enterprise subscription.");
-           }
-           const errorData = await creditResponse.json().catch(() => ({}));
-           throw new Error(errorData.error || `Failed to consume credit. Status: ${creditResponse.status}`);
-        }
-
-        const { receipt } = await creditResponse.json();
-        const dummySessionId = receipt || 'b2b_' + Math.random().toString(36).substring(2, 15);
-
-        navigate(`/success?session_id=${dummySessionId}`);
-        return;
-      }
-
       const response = await fetch('/api/create-checkout-session', {
 
         method: 'POST',
@@ -151,7 +131,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
             <button 
               onClick={handlePayment}
-              disabled={loading}
+              disabled={loading || !isValid}
               className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(0,229,255,0.2)]"
             >
               {loading ? (
