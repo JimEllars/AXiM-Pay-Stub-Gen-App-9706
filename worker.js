@@ -308,7 +308,11 @@ export default {
             rotate: { angle: 45, type: 'degrees' }
         });
 
+
         const pdfBytes = await pdfDoc.save();
+
+
+
 
         // 3. Return PDF stream
         return new Response(pdfBytes, {
@@ -547,7 +551,26 @@ export default {
         drawText(`Document Ref: ${docId}`, 40, 30, 8, false, rgb(0.5, 0.5, 0.5));
         drawText(`Generated: ${generationTime}`, 40, 20, 8, false, rgb(0.5, 0.5, 0.5));
 
+
         const pdfBytes = await pdfDoc.save();
+
+        // Vault Upload
+        const vaultFormData = new FormData();
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+        vaultFormData.append('document', blob, 'paystub.pdf');
+        vaultFormData.append('document_type', 'pay_stub');
+        vaultFormData.append('trace_id', docId);
+
+        ctx.waitUntil(
+          fetch(`${apiBase}/v1/vault-upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+            },
+            body: vaultFormData
+          }).catch(e => console.error("Vault upload failed:", e))
+        );
+
 
 
 

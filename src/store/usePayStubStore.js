@@ -19,6 +19,7 @@ const initialFormState = {
   ],
   customDeductions: [],
   taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
+  autoCalculate: true,
   calculatedTotals: {
     currentGross: 0.00,
     ytdGross: 0.00,
@@ -43,6 +44,16 @@ export const usePayStubStore = create(persist((set, get) => ({
     );
   },
 
+
+
+  toggleAutoCalculate: (value) => {
+    set({ autoCalculate: value });
+    if (value) {
+      // reset overrides if turning ON auto-calculate
+      set({ taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false } });
+      get().recalculateAll();
+    }
+  },
 
   hydrateStore: (data) => {
     if (!data) return;
@@ -141,6 +152,7 @@ addEarning: () => set((state) => ({
 
   updateTaxOverride: (taxType, amount) => {
     set((state) => ({
+      autoCalculate: false,
       taxOverrides: { ...state.taxOverrides, [taxType]: true },
       calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(amount) || 0 } }
     }));
@@ -221,12 +233,20 @@ addEarning: () => set((state) => ({
       calculatedTotals: {
         ...state.calculatedTotals,
         currentGross: grossPay,
-        taxes: {
-          ...state.calculatedTotals.taxes,
-          socialSecurity: state.taxOverrides.socialSecurity ? state.calculatedTotals.taxes.socialSecurity : fica.socialSecurity,
-          medicare: state.taxOverrides.medicare ? state.calculatedTotals.taxes.medicare : fica.medicare,
-          federalIncomeTax: state.taxOverrides.federalIncomeTax ? state.calculatedTotals.taxes.federalIncomeTax : fit
-        }
+        taxes: state.autoCalculate
+          ? {
+              ...state.calculatedTotals.taxes,
+              socialSecurity: fica.socialSecurity,
+              medicare: fica.medicare,
+              federalIncomeTax: fit,
+              // Keep stateIncomeTax as it is since it's an override only
+            }
+          : {
+              ...state.calculatedTotals.taxes,
+              socialSecurity: state.taxOverrides.socialSecurity ? state.calculatedTotals.taxes.socialSecurity : fica.socialSecurity,
+              medicare: state.taxOverrides.medicare ? state.calculatedTotals.taxes.medicare : fica.medicare,
+              federalIncomeTax: state.taxOverrides.federalIncomeTax ? state.calculatedTotals.taxes.federalIncomeTax : fit
+            }
       }
     }));
     get().recalculateNetPay();
