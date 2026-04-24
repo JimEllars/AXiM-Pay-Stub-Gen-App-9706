@@ -25,12 +25,20 @@ const EmployeeSection = () => {
         <h2 className="text-lg font-bold text-axim-teal mb-4 uppercase tracking-wider">Employee Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <InputField label="Full Name" value={employeeDetails.name} required error={!employeeDetails.name} onChange={(v) => updateEmployee('name', v)} placeholder="John Doe" />
+          <InputField label="SSN (Last 4 digits)" value={employeeDetails.ssnLast4 || ''} onChange={(v) => {
+            const numbers = v.replace(/\D/g, '');
+            updateEmployee('ssnLast4', numbers.slice(0, 4));
+          }} placeholder="1234" />
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">State</label>
              <input type="text" value={employeeDetails.state} onChange={(e) => updateEmployee('state', e.target.value)} className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono" />
           </div>
-          <div className="md:col-span-2">
-            <InputField label="Home Address" value={employeeDetails.address} onChange={(v) => updateEmployee('address', v)} placeholder="456 Residential Way, City, ST 12345" />
+          <div className="md:col-span-2 grid grid-cols-[1fr_120px] gap-4">
+            <InputField label="Home Address" value={employeeDetails.address} onChange={(v) => updateEmployee('address', v)} placeholder="456 Residential Way, City, ST" />
+            <InputField label="ZIP Code" value={employeeDetails.zipCode || ''} onChange={(v) => {
+              const numbers = v.replace(/\D/g, '');
+              updateEmployee('zipCode', numbers.slice(0, 5));
+            }} placeholder="12345" />
           </div>
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Marital Status</label>

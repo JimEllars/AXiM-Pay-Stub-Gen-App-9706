@@ -70,7 +70,7 @@ const Landing = () => {
               to="/app/generator"
               className="group bg-axim-teal text-bg-void font-black text-lg px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)]"
             >
-              Create Pay Stub - $9.99
+              Create Pay Stub - $4.00
               <SafeIcon icon={FiArrowRight} className="group-hover:translate-x-1 transition-transform" />
             </Link>
             <button className="px-10 py-5 rounded-2xl border border-white/10 font-bold bg-white/5 hover:bg-white/10 transition-all">
