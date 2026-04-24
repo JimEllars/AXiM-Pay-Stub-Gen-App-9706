@@ -4,6 +4,18 @@ import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
  * Handles Stripe orchestration, session verification, and PDF generation stubs.
  */
 
+const previewRateLimitMap = new Map();
+
+// Helper to clean up old rate limit entries
+function cleanupRateLimits() {
+  const now = Date.now();
+  for (const [ip, data] of previewRateLimitMap.entries()) {
+    if (now - data.startTime > 60000) {
+      previewRateLimitMap.delete(ip);
+    }
+  }
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*', // In production, replace with specific AXiM domains
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -107,6 +119,32 @@ export default {
 
     if (url.pathname === '/api/generate-preview' && request.method === 'POST') {
       try {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const now = Date.now();
+
+        cleanupRateLimits();
+
+        if (ip !== 'unknown') {
+           let rateData = previewRateLimitMap.get(ip);
+           if (!rateData) {
+             rateData = { count: 1, startTime: now };
+             previewRateLimitMap.set(ip, rateData);
+           } else {
+             if (now - rateData.startTime < 60000) {
+               rateData.count++;
+               if (rateData.count > 30) {
+                 return new Response(JSON.stringify({ error: "Too Many Requests" }), {
+                   status: 429,
+                   headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' }
+                 });
+               }
+             } else {
+               rateData.count = 1;
+               rateData.startTime = now;
+             }
+           }
+        }
+
         const { formData } = await request.json();
 
         if (!formData) {

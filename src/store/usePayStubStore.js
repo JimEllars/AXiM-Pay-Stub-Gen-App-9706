@@ -11,6 +11,7 @@ const TAX_RATES = {
 };
 
 const initialFormState = {
+  ytdGrossOverridden: false,
   employerDetails: { name: '', address: '', ein: '' },
   employeeDetails: { name: '', address: '', maritalStatus: 'single', state: 'TX' },
   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' },
@@ -165,7 +166,10 @@ addEarning: () => set((state) => ({
   },
 
   updateYtdGross: (amount) => {
-    set((state) => ({ calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(amount) || 0 } }));
+    set((state) => ({
+      ytdGrossOverridden: true,
+      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(amount) || 0 }
+    }));
     get().recalculateAll();
   },
 
@@ -221,11 +225,46 @@ addEarning: () => set((state) => ({
   recalculateAll: () => {
     const state = get();
     const grossPay = state.calculateGrossPay();
-    let parsedYtd = state.calculatedTotals.ytdGross;
+
+    const payDate = state.payPeriod.payDate;
+    const frequency = state.payPeriod.frequency;
+    let elapsedPeriods = 1;
+
+    if (payDate) {
+      const [year, month, day] = payDate.split('-').map(Number);
+      const currentPayDate = new Date(year, month - 1, day);
+      const startOfYear = new Date(year, 0, 1);
+
+      const diffTime = Math.abs(currentPayDate - startOfYear);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (frequency === 'weekly') {
+        elapsedPeriods = Math.max(1, Math.ceil(diffDays / 7));
+      } else if (frequency === 'bi-weekly') {
+        elapsedPeriods = Math.max(1, Math.ceil(diffDays / 14));
+      } else if (frequency === 'semi-monthly') {
+        elapsedPeriods = Math.max(1, (month - 1) * 2 + (day > 15 ? 2 : 1));
+      } else if (frequency === 'monthly') {
+        elapsedPeriods = Math.max(1, month);
+      }
+    }
+
+    // update ytd for earnings based on elapsed periods
+    let calculatedYtdGross = 0;
+    const updatedEarningsWithYtd = state.earnings.map(e => {
+       const newYtdTotal = e.currentTotal * elapsedPeriods;
+       calculatedYtdGross += newYtdTotal;
+       return { ...e, ytdTotal: parseFloat(newYtdTotal.toFixed(2)) };
+    });
+
+    set({ earnings: updatedEarningsWithYtd });
+
+    let parsedYtd = state.ytdGrossOverridden ? state.calculatedTotals.ytdGross : parseFloat(calculatedYtdGross.toFixed(2));
+
     if (parsedYtd < grossPay) {
       parsedYtd = grossPay;
-      set((s) => ({ calculatedTotals: { ...s.calculatedTotals, ytdGross: grossPay } }));
     }
+    set((s) => ({ calculatedTotals: { ...s.calculatedTotals, ytdGross: parsedYtd } }));
     const fica = state.calculateFICA(grossPay, parsedYtd);
     const fit = state.calculateFIT(grossPay, state.payPeriod.frequency, state.employeeDetails.maritalStatus);
 

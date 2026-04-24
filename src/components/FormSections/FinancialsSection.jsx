@@ -50,7 +50,7 @@ const FinancialsSection = () => {
               </div>
               <div className="col-span-12 md:col-span-3">
                 <input 
-                  type="number" step="0.01" placeholder="Hours"
+                  type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Hours"
                   value={earning.hours || ''}
                   onChange={(e) => updateEarning(earning.id, 'hours', e.target.value)}
                   disabled={earning.type === 'Bonus' || earning.type === 'Commission'}
@@ -59,9 +59,9 @@ const FinancialsSection = () => {
               </div>
               <div className="col-span-12 md:col-span-3">
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs">$</span>
+                  <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
                   <input 
-                    type="number" step="0.01" placeholder="Rate"
+                    type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Rate"
                     value={earning.rate || ''}
                     onChange={(e) => updateEarning(earning.id, 'rate', e.target.value)}
                     className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm font-mono focus:border-axim-teal outline-none transition-all"
@@ -107,9 +107,9 @@ const FinancialsSection = () => {
               </div>
               <div className="col-span-10 md:col-span-4">
                 <div className="relative">
-                  <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs">$</span>
+                  <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
                   <input 
-                    type="number" step="0.01" placeholder="Amount"
+                    type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Amount"
                     value={deduction.amount || ''}
                     onChange={(e) => updateCustomDeduction(deduction.id, 'amount', e.target.value)}
                     className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm font-mono focus:border-axim-teal outline-none transition-all"
@@ -161,9 +161,9 @@ const FinancialsSection = () => {
             <div key={key} className="flex flex-col gap-1.5">
               <div className="flex justify-between items-center mb-1.5"><label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>{taxOverrides[key] && <button onClick={() => resetTaxOverride(key)} className="text-[9px] text-axim-gold hover:text-white flex items-center gap-1 transition-colors"><SafeIcon icon={FiRefreshCw} size={10} /> Reset</button>}</div>
               <div className="relative">
-                <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs">$</span>
+                <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
                 <input 
-                  type="number" step="0.01"
+                  type="number" inputMode="decimal" pattern="[0-9]*" step="0.01"
                   value={calculatedTotals.taxes[key] || ''}
                   onChange={(e) => updateTaxOverride(key, e.target.value)}
                   className={`w-full bg-black/50 border ${taxOverrides[key] ? 'border-axim-gold/50' : 'border-white/10'} rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono transition-all`}
@@ -177,9 +177,9 @@ const FinancialsSection = () => {
           <div className="flex flex-col gap-1.5 max-w-xs">
             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Prior YTD Gross (Optional)</label>
             <div className="relative">
-              <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs">$</span>
+              <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
               <input 
-                type="number" step="0.01"
+                type="number" inputMode="decimal" pattern="[0-9]*" step="0.01"
                 value={calculatedTotals.ytdGross || ''}
                 onChange={(e) => updateYtdGross(e.target.value)}
                 className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono"
