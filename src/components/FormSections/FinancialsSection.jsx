@@ -7,7 +7,7 @@ const FinancialsSection = () => {
   const { 
     earnings, addEarning, updateEarning, removeEarning, 
     customDeductions, addCustomDeduction, updateCustomDeduction, removeCustomDeduction,
-    calculatedTotals, taxOverrides, updateTaxOverride, resetTaxOverride, updateYtdGross
+    calculatedTotals, taxOverrides, updateTaxOverride, resetTaxOverride, updateYtdGross, autoCalculate, toggleAutoCalculate
   } = usePayStubStore();
 
   return (
@@ -138,6 +138,16 @@ const FinancialsSection = () => {
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-black border border-white/10 text-[10px] text-gray-400 rounded hidden group-hover:block z-20">
               Tax estimates are based on 2024 progressive brackets. You may manually edit these to match exact records.
             </div>
+          </div>
+
+          <div className="ml-auto flex items-center gap-3">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Auto-Calculate</span>
+            <button
+              onClick={() => toggleAutoCalculate(!autoCalculate)}
+              className={`w-10 h-5 rounded-full relative transition-colors ${autoCalculate ? 'bg-axim-teal' : 'bg-gray-600'}`}
+            >
+              <span className={`absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-transform ${autoCalculate ? 'translate-x-5' : 'translate-x-0'}`} />
+            </button>
           </div>
         </div>
 

@@ -15,23 +15,11 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
   </div>
 );
 
-const DetailsSection = () => {
-  const { employerDetails, employeeDetails, payPeriod, updateEmployer, updateEmployee, updatePayPeriod } = usePayStubStore();
+const EmployeeSection = () => {
+  const { employeeDetails, updateEmployee, payPeriod, updatePayPeriod } = usePayStubStore();
 
   return (
     <div className="space-y-8">
-      {/* Employer Details */}
-      <div className="bg-glass border border-white/10 p-6 rounded-xl backdrop-blur-md">
-        <h2 className="text-lg font-bold text-axim-teal mb-4 uppercase tracking-wider">Employer Information</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField label="Company Name" value={employerDetails.name} required error={!employerDetails.name} onChange={(v) => updateEmployer('name', v)} placeholder="Acme Corp" />
-          <InputField label="EIN (Employer ID)" value={employerDetails.ein} onChange={(v) => updateEmployer('ein', v)} placeholder="XX-XXXXXXX" />
-          <div className="md:col-span-2">
-            <InputField label="Company Address" value={employerDetails.address} onChange={(v) => updateEmployer('address', v)} placeholder="123 Business Rd, City, ST 12345" />
-          </div>
-        </div>
-      </div>
-
       {/* Employee Details */}
       <div className="bg-glass border border-white/10 p-6 rounded-xl backdrop-blur-md">
         <h2 className="text-lg font-bold text-axim-teal mb-4 uppercase tracking-wider">Employee Information</h2>
@@ -75,4 +63,4 @@ const DetailsSection = () => {
   );
 };
 
-export default DetailsSection;
+export default EmployeeSection;
