@@ -1,4 +1,4 @@
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
 /**
  * AXiM Systems Edge Proxy - Production v1.0
  * Handles Stripe orchestration, session verification, and PDF generation stubs.
@@ -362,7 +362,7 @@ export default {
             font: boldFont,
             color: rgb(0.8, 0.8, 0.8),
             opacity: 0.5,
-            rotate: { angle: 45, type: 'degrees' }
+            rotate: degrees(45)
         });
 
 

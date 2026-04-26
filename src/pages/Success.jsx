@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle, FiMail, FiSend } from 'react-icons/fi';
 import { usePayStubStore } from '../store/usePayStubStore';
+import confetti from 'canvas-confetti';
 
 const Success = () => {
   const [searchParams] = useSearchParams();
@@ -52,6 +53,14 @@ const Success = () => {
           }
 
           setStatus('success');
+
+          // Trigger Confetti Celebration
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#00e5ff', '#ffea00', '#ffffff']
+          });
 
           localStorage.removeItem('axim_paystub_draft_continuous');
 
