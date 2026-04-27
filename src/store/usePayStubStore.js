@@ -56,14 +56,43 @@ export const usePayStubStore = create(persist((set, get) => ({
     }
   },
 
+
+  maskString: (value, type) => {
+    if (!value) return '';
+    const digits = value.replace(/\D/g, '');
+    if (type === 'ein') {
+      if (digits.length <= 2) return digits;
+      return `${digits.slice(0, 2)}-${digits.slice(2, 9)}`;
+    }
+    if (type === 'ssn') {
+      if (digits.length <= 3) return digits;
+      if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}`;
+      return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}`;
+    }
+    if (type === 'zip') {
+      return digits.slice(0, 5);
+    }
+    return value;
+  },
+
   hydrateStore: (data) => {
     if (!data) return;
     set({ ...data });
   },
 
-  updateEmployer: (field, value) => set((state) => ({ employerDetails: { ...state.employerDetails, [field]: value } })),
+  updateEmployer: (field, value) => set((state) => {
+    let maskedValue = value;
+    if (field === 'ein') maskedValue = get().maskString(value, 'ein');
+    else if (field === 'zip') maskedValue = get().maskString(value, 'zip');
+    return { employerDetails: { ...state.employerDetails, [field]: maskedValue } };
+  }),
   updateEmployee: (field, value) => {
-    set((state) => ({ employeeDetails: { ...state.employeeDetails, [field]: value } }));
+    set((state) => {
+      let maskedValue = value;
+      if (field === 'ssnLast4' || field === 'ssn') maskedValue = get().maskString(value, 'ssn');
+      else if (field === 'zip') maskedValue = get().maskString(value, 'zip');
+      return { employeeDetails: { ...state.employeeDetails, [field]: maskedValue } };
+    });
     get().recalculateAll();
   },
 

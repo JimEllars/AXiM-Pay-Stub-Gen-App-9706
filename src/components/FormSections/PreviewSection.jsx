@@ -142,6 +142,29 @@ const PreviewSection = ({ onFinalize }) => {
         </div>
       </div>
 
+      {/* Financial Breakdown Table (Pre-Flight Summary) */}
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 mb-8 text-white">
+        <h3 className="text-sm font-black uppercase tracking-widest text-axim-teal mb-4 border-b border-white/10 pb-2">Financial Breakdown</h3>
+        <div className="space-y-3 font-mono text-sm">
+          <div className="flex justify-between items-center text-gray-400">
+            <span>Gross Pay</span>
+            <span>${calculatedTotals.currentGross.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-gray-400">
+            <span>Estimated Taxes</span>
+            <span>-${(calculatedTotals.taxes.socialSecurity + calculatedTotals.taxes.medicare + calculatedTotals.taxes.federalIncomeTax + calculatedTotals.taxes.stateIncomeTax).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-gray-400 pb-3 border-b border-white/10">
+            <span>Other Deductions</span>
+            <span>-${(calculatedTotals.totalDeductions - (calculatedTotals.taxes.socialSecurity + calculatedTotals.taxes.medicare + calculatedTotals.taxes.federalIncomeTax + calculatedTotals.taxes.stateIncomeTax)).toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center font-black text-2xl text-axim-gold pt-2">
+            <span>NET PAY</span>
+            <span>${calculatedTotals.netPay.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Action Bar */}
       <div className="bg-glass border border-white/10 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6">
         <div className="text-sm text-gray-400 font-light max-w-sm">
