@@ -41,7 +41,24 @@ const PaymentModal = ({ isOpen, onClose }) => {
       calculatedTotals: storeState.calculatedTotals
     };
 
-    sessionStorage.setItem('axim_paystub_draft', JSON.stringify(stateToStore));
+        if (planType === 'bundle') {
+       const existingQueueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+       let queue = existingQueueStr ? JSON.parse(existingQueueStr) : [];
+       queue.push(stateToStore);
+       sessionStorage.setItem('axim_paystub_draft_queue', JSON.stringify(queue));
+
+       if (queue.length < 6) {
+          // Alert user they can add more or proceed. For better UX, we'll confirm
+          const addMore = window.confirm(`Added ${queue.length}/6 stubs to batch.\n\nClick OK to add another stub (you can change pay dates or amounts).\nClick Cancel to proceed to checkout with ${queue.length} stubs.`);
+          if (addMore) {
+             setLoading(false);
+             onClose(); // close modal to allow them to edit and add more
+             return; // don't proceed to checkout yet
+          }
+       }
+    } else {
+       sessionStorage.setItem('axim_paystub_draft', JSON.stringify(stateToStore));
+    }
 
 
     try {
@@ -53,7 +70,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
           productId: planType === "bundle" ? "pay_stub_bundle" : "pay_stub_generator",
           metadata: {
             deliveryEmail: email,
-            documentType: "pay_stub_v1"
+            documentType: planType === "bundle" ? "pay_stub_bundle_v1" : "pay_stub_v1"
           }
         })
       });

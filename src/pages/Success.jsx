@@ -81,9 +81,18 @@ const Success = () => {
 
         if (data.isPaid) {
           // PHASE 3: Re-hydrate State
+          const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
           const rawDraft = sessionStorage.getItem('axim_paystub_draft');
           let parsedDraft = null;
-          if (rawDraft) {
+
+          if (queueStr) {
+             const q = JSON.parse(queueStr);
+             parsedDraft = q; // Array
+             // Hydrate the store with the last one to show *some* details
+             if (q.length > 0) {
+               hydrateStore(q[q.length - 1]);
+             }
+          } else if (rawDraft) {
             parsedDraft = JSON.parse(rawDraft);
             hydrateStore(parsedDraft);
           }
