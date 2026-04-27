@@ -16,14 +16,17 @@ function cleanupRateLimits() {
   }
 }
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*', // In production, replace with specific AXiM domains
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
-
 export default {
   async fetch(request, env, ctx) {
+    const origin = request.headers.get('Origin') || '';
+    const allowedOrigins = ['https://app.axim.us.com', 'https://api.axim.us.com'];
+    const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': allowOrigin,
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    };
     // Handle CORS Pre-flight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: corsHeaders });
@@ -58,9 +61,9 @@ export default {
                 price_data: {
                   currency: 'usd',
                   product_data: {
-                    name: 'AXiM Pay Stub Generation',
+                    name: body.productId === "pay_stub_bundle" ? "AXiM Pay Stub Bundle" : "AXiM Pay Stub Generation",
                   },
-                  unit_amount: 400,
+                  unit_amount: body.productId === "pay_stub_bundle" ? 2000 : 400,
                 },
                 quantity: 1,
               },
@@ -130,11 +133,11 @@ export default {
      */
 
 
-    async function generatePdf(formData, isPreview) {
+    async function generatePdf(formData, isPreview, masterPdfDoc) {
       const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, theme } = formData;
       const activeTheme = theme || 'AXiM Classic';
 
-      const pdfDoc = await PDFDocument.create();
+      const pdfDoc = masterPdfDoc || await PDFDocument.create();
       const page = pdfDoc.addPage([612, 792]);
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
@@ -454,14 +457,12 @@ export default {
         let docId;
 
         if (Array.isArray(formData)) {
-           // It's a batch! Create a master PDF and copy pages into it
+           // It's a batch! Progressive Streaming (direct page addition)
            finalPdfDoc = await PDFDocument.create();
            docId = 'AXIM-BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
            for (const data of formData) {
-             const { pdfDoc } = await generatePdf(data, false);
-             const copiedPages = await finalPdfDoc.copyPages(pdfDoc, pdfDoc.getPageIndices());
-             copiedPages.forEach((page) => finalPdfDoc.addPage(page));
+             await generatePdf(data, false, finalPdfDoc);
            }
         } else {
            const res = await generatePdf(formData, false);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import { PAY_FREQUENCIES } from '../../utils/constants';
 
@@ -18,6 +18,7 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
 
 const EmployeeSection = () => {
   const { employeeDetails, updateEmployee, payPeriod, updatePayPeriod } = usePayStubStore();
+  const [isZipLoading, setIsZipLoading] = useState(false);
 
   return (
     <div className="space-y-8">
@@ -40,29 +41,46 @@ const EmployeeSection = () => {
           </div>
           <div className="md:col-span-2 grid grid-cols-[1fr_120px] gap-4">
             <InputField label="Home Address" value={employeeDetails.address} onChange={(v) => updateEmployee('address', v)} placeholder="456 Residential Way" />
-            <InputField label="ZIP Code" value={employeeDetails.zipCode || ''} onChange={async (v) => {
-              const numbers = v.replace(/\D/g, '');
-              const zip = numbers.slice(0, 5);
-              updateEmployee('zipCode', zip);
+            <div className="relative">
+              <InputField label="ZIP Code" value={employeeDetails.zipCode || ''} onChange={async (v) => {
+                const numbers = v.replace(/\D/g, '');
+                const zip = numbers.slice(0, 5);
+                updateEmployee('zipCode', zip);
 
-              if (zip.length === 5) {
-                try {
-                  const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
-                  if (res.ok) {
-                    const data = await res.json();
-                    const place = data.places[0];
-                    if (place) {
-                       const city = place['place name'];
-                       const state = place['state abbreviation'];
-                       updateEmployee('state', state);
-                       updateEmployee('city', city);
+                if (zip.length === 5) {
+                  setIsZipLoading(true);
+                  try {
+                    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      const place = data.places[0];
+                      if (place) {
+                         const city = place['place name'];
+                         const state = place['state abbreviation'];
+                         updateEmployee('state', state);
+                         updateEmployee('city', city);
+                      }
+                    } else {
+                      throw new Error('ZIP not found');
                     }
+                  } catch (e) {
+                    console.error('ZIP lookup failed', e);
+                    fetch('/api/v1/telemetry/ingest', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ event: "zip_lookup_failed", zipCode: zip, error: e.message })
+                    }).catch(console.error);
+                  } finally {
+                    setIsZipLoading(false);
                   }
-                } catch (e) {
-                  console.error('ZIP lookup failed', e);
                 }
-              }
-            }} placeholder="12345" maxLength={5} />
+              }} placeholder="12345" maxLength={5} />
+              {isZipLoading && (
+                <div className="absolute right-3 top-9">
+                  <div className="w-4 h-4 border-2 border-axim-teal/30 border-t-axim-teal rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Marital Status</label>
