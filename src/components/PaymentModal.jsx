@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 const PaymentModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [planType, setPlanType] = useState('single');
   const storeState = usePayStubStore();
   const navigate = useNavigate();
 
@@ -49,7 +50,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productId: "pay_stub_generator",
+          productId: planType === "bundle" ? "pay_stub_bundle" : "pay_stub_generator",
           metadata: {
             deliveryEmail: email,
             documentType: "pay_stub_v1"
@@ -121,12 +122,29 @@ const PaymentModal = ({ isOpen, onClose }) => {
               />
             </div>
 
-            <div className="bg-white/5 border border-white/5 p-6 rounded-2xl flex justify-between items-center">
-              <div>
-                <p className="text-xs text-gray-400 font-medium">Professional Pay Stub</p>
-                <p className="text-[10px] text-gray-600 uppercase tracking-widest mt-1">One-time Generation</p>
-              </div>
-              <span className="text-axim-gold font-mono font-black text-2xl">$4.00</span>
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={() => setPlanType('single')}
+                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all ${planType === 'single' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+              >
+                <div>
+                  <p className="text-sm text-white font-medium">Single Pay Stub</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">One-time Generation</p>
+                </div>
+                <span className="text-axim-gold font-mono font-black text-xl">$4.00</span>
+              </button>
+
+              <button
+                onClick={() => setPlanType('bundle')}
+                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all relative overflow-hidden ${planType === 'bundle' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+              >
+                <div className="absolute top-0 right-0 bg-axim-gold text-black text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-bl-lg">Most Popular</div>
+                <div>
+                  <p className="text-sm text-white font-medium flex items-center gap-2">Buy 5, Get 1 Free <span className="bg-axim-teal text-black text-[9px] px-1.5 py-0.5 rounded font-black">+1</span></p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">6 Credits Added to Account</p>
+                </div>
+                <span className="text-axim-gold font-mono font-black text-xl">$20.00</span>
+              </button>
             </div>
 
             <button 

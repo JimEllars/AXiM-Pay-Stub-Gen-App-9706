@@ -3,15 +3,31 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import { FiChevronUp, FiChevronDown } from 'react-icons/fi';
 
 const SummaryCard = () => {
-  const { calculatedTotals } = usePayStubStore();
+  const { calculatedTotals, employerDetails, employeeDetails } = usePayStubStore();
   const { currentGross, taxes, totalDeductions, netPay } = calculatedTotals;
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const isMortgageReady =
+    employerDetails?.ein?.length >= 9 &&
+    employeeDetails?.ssnLast4?.length >= 4 &&
+    employerDetails?.address?.length > 5 &&
+    employeeDetails?.address?.length > 5;
+
 
   return (
     <>
       {/* Desktop Version */}
       <div className="hidden lg:block sticky top-8 bg-glass border border-white/10 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
         <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider">Live Summary</h3>
+
+        <div className={`mb-6 p-3 rounded-lg border flex items-center gap-3 ${isMortgageReady ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-gray-500/10 border-gray-500/30 text-gray-400'}`}>
+          <div className={`w-3 h-3 rounded-full ${isMortgageReady ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]' : 'bg-gray-500'}`} />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold uppercase tracking-widest">{isMortgageReady ? 'Mortgage/Rental Ready' : 'Draft Mode'}</span>
+            <span className="text-[9px] opacity-70">{isMortgageReady ? 'All required verification fields complete' : 'Missing EIN, SSN, or Address data'}</span>
+          </div>
+        </div>
+
 
         <div className="space-y-4 font-mono text-sm">
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
