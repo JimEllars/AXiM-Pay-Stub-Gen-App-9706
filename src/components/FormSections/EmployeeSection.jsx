@@ -2,7 +2,7 @@ import React from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import { PAY_FREQUENCIES } from '../../utils/constants';
 
-const InputField = ({ label, value, onChange, type = "text", placeholder, required, error }) => (
+const InputField = ({ label, value, onChange, type = "text", placeholder, required, error, maxLength }) => (
   <div className="flex flex-col gap-1.5 mb-4">
     <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex justify-between">{label} {required && <span className="text-red-500 text-[10px]">*</span>}</label>
     <input 
@@ -10,6 +10,7 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      maxLength={maxLength}
       className={`bg-black/50 border ${error ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono`}
     />
   </div>
@@ -28,17 +29,40 @@ const EmployeeSection = () => {
           <InputField label="SSN (Last 4 digits)" value={employeeDetails.ssnLast4 || ''} onChange={(v) => {
             const numbers = v.replace(/\D/g, '');
             updateEmployee('ssnLast4', numbers.slice(0, 4));
-          }} placeholder="1234" />
+          }} placeholder="1234" maxLength={4} />
+          <div className="flex flex-col gap-1.5 mb-4">
+             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">City</label>
+             <input type="text" value={employeeDetails.city || ''} onChange={(e) => updateEmployee('city', e.target.value)} className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono" />
+          </div>
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">State</label>
              <input type="text" value={employeeDetails.state} onChange={(e) => updateEmployee('state', e.target.value)} className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono" />
           </div>
           <div className="md:col-span-2 grid grid-cols-[1fr_120px] gap-4">
-            <InputField label="Home Address" value={employeeDetails.address} onChange={(v) => updateEmployee('address', v)} placeholder="456 Residential Way, City, ST" />
-            <InputField label="ZIP Code" value={employeeDetails.zipCode || ''} onChange={(v) => {
+            <InputField label="Home Address" value={employeeDetails.address} onChange={(v) => updateEmployee('address', v)} placeholder="456 Residential Way" />
+            <InputField label="ZIP Code" value={employeeDetails.zipCode || ''} onChange={async (v) => {
               const numbers = v.replace(/\D/g, '');
-              updateEmployee('zipCode', numbers.slice(0, 5));
-            }} placeholder="12345" />
+              const zip = numbers.slice(0, 5);
+              updateEmployee('zipCode', zip);
+
+              if (zip.length === 5) {
+                try {
+                  const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    const place = data.places[0];
+                    if (place) {
+                       const city = place['place name'];
+                       const state = place['state abbreviation'];
+                       updateEmployee('state', state);
+                       updateEmployee('city', city);
+                    }
+                  }
+                } catch (e) {
+                  console.error('ZIP lookup failed', e);
+                }
+              }
+            }} placeholder="12345" maxLength={5} />
           </div>
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Marital Status</label>

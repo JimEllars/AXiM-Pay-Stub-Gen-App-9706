@@ -109,6 +109,7 @@ const Generator = () => {
   return (
     <div className="min-h-screen bg-bg-void text-white font-sans selection:bg-axim-teal selection:text-black">
       
+
       {/* Top Progress Bar */}
       <div className="w-full h-1 bg-white/10 fixed top-0 left-0 z-50">
         <motion.div 
@@ -118,6 +119,24 @@ const Generator = () => {
           transition={{ duration: 0.5, ease: 'easeInOut' }}
         />
       </div>
+
+      {/* Batch Notice */}
+      {(() => {
+        const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+        if (queueStr) {
+          const q = JSON.parse(queueStr);
+          if (q.length > 0 && q.length < 6) {
+             return (
+               <div className="bg-axim-teal/20 text-axim-teal text-center py-2 px-4 border-b border-axim-teal/30 flex items-center justify-center gap-2">
+                 <FiAlertTriangle />
+                 <span>Batch Mode: <b>{q.length}/6</b> stubs added to queue. Edit details and click Finalize to add next.</span>
+               </div>
+             );
+          }
+        }
+        return null;
+      })()}
+
 
       <div className="max-w-screen-2xl mx-auto px-4 py-12 md:py-20 lg:flex lg:gap-12">
         

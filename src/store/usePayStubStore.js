@@ -25,7 +25,7 @@ const TAX_RATES = {
 const initialFormState = {
   ytdGrossOverridden: false,
   employerDetails: { name: '', address: '', ein: '', zipCode: '' },
-  employeeDetails: { name: '', address: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
+  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' },
   earnings: [
     { id: '1', type: 'Regular', hours: 40, rate: 0.00, currentTotal: 0.00, ytdTotal: 0.00 }

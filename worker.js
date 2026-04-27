@@ -450,8 +450,26 @@ export default {
            });
         }
 
-        const { pdfDoc, docId } = await generatePdf(formData, false);
-        const pdfBytes = await pdfDoc.save();
+        let finalPdfDoc;
+        let docId;
+
+        if (Array.isArray(formData)) {
+           // It's a batch! Create a master PDF and copy pages into it
+           finalPdfDoc = await PDFDocument.create();
+           docId = 'AXIM-BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+
+           for (const data of formData) {
+             const { pdfDoc } = await generatePdf(data, false);
+             const copiedPages = await finalPdfDoc.copyPages(pdfDoc, pdfDoc.getPageIndices());
+             copiedPages.forEach((page) => finalPdfDoc.addPage(page));
+           }
+        } else {
+           const res = await generatePdf(formData, false);
+           finalPdfDoc = res.pdfDoc;
+           docId = res.docId;
+        }
+
+        const pdfBytes = await finalPdfDoc.save();
 
         const vaultFormData = new FormData();
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
