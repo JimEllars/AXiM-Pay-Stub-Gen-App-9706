@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
-import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle, FiMail, FiSend } from 'react-icons/fi';
+import { FiCheckCircle, FiDownload, FiLoader, FiAlertCircle, FiMail, FiSend, FiCopy } from 'react-icons/fi';
 import { usePayStubStore } from '../store/usePayStubStore';
 import confetti from 'canvas-confetti';
 
@@ -16,6 +16,42 @@ const Success = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
   const storeState = usePayStubStore();
+
+  const navigate = useNavigate();
+  const recalculateAll = usePayStubStore(state => state.recalculateAll);
+
+  const handleDuplicate = () => {
+    // 1. Get current store state
+    const currentState = usePayStubStore.getState();
+
+    // 2. We need to increment dates. This logic is a simple approximation.
+    // In a real robust system, we would parse the frequency and add exact days.
+    // For MVP, we'll just clear the dates so the user is forced to pick the next period.
+
+    const newDraft = {
+        ...currentState,
+        payPeriod: {
+            ...currentState.payPeriod,
+            startDate: '',
+            endDate: '',
+            payDate: ''
+        },
+        calculatedTotals: {
+            ...currentState.calculatedTotals,
+            // Carry over current Gross into YTD to jump start the next period
+            ytdGross: currentState.calculatedTotals.ytdGross + currentState.calculatedTotals.currentGross,
+        },
+        ytdGrossOverridden: true
+    };
+
+    // 3. Hydrate
+    hydrateStore(newDraft);
+    recalculateAll();
+
+    // 4. Navigate
+    navigate('/app/generator');
+  };
+
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -274,6 +310,15 @@ const Success = () => {
               </button>
             </div>
           </div>
+
+
+          <button
+            onClick={handleDuplicate}
+            className="w-full bg-white/5 border border-white/10 text-white font-bold py-4 rounded-xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 mt-4"
+          >
+            <SafeIcon icon={FiCopy} />
+            Duplicate for Next Pay Period
+          </button>
 
           <Link to="/" className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-[10px]">
             Return to Dashboard

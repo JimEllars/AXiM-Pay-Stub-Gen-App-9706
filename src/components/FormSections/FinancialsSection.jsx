@@ -185,7 +185,7 @@ const FinancialsSection = () => {
                 className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono"
               />
             </div>
-            <p className="text-[10px] text-gray-500 mt-1 italic">Used to stop FICA tax if $168,600 limit is reached.</p>
+            <p className="text-[10px] text-gray-500 mt-1 italic">Used to stop FICA tax if $168,600 limit is reached. Will automatically interpolate missing period data for earnings and deductions.</p>
           </div>
         </div>
       </div>

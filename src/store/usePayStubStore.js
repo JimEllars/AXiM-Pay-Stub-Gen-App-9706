@@ -2,6 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { PAY_FREQUENCIES, STANDARD_DEDUCTION_2024 } from '../utils/constants';
 
+
+const STATE_TAX_RATES = {
+  TX: 0,
+  FL: 0,
+  NV: 0,
+  WA: 0,
+  CA: 0.093, // Simplified bracket estimate
+  NY: 0.0685, // Simplified bracket estimate
+  IL: 0.0495, // Flat rate
+  PA: 0.0307, // Flat rate
+};
+
 const TAX_RATES = {
   SOCIAL_SECURITY: 0.062,
   MEDICARE: 0.0145,
@@ -20,6 +32,7 @@ const initialFormState = {
   ],
   customDeductions: [],
   taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
+  theme: 'AXiM Classic',
   autoCalculate: true,
   calculatedTotals: {
     currentGross: 0.00,
@@ -96,6 +109,8 @@ export const usePayStubStore = create(persist((set, get) => ({
     get().recalculateAll();
   },
 
+
+  updateTheme: (theme) => set({ theme }),
 
   updatePayPeriod: (field, value) => {
     set((state) => {
@@ -225,6 +240,12 @@ addEarning: () => set((state) => ({
     return { socialSecurity: parseFloat(socialSecurity.toFixed(2)), medicare: parseFloat(medicare.toFixed(2)) };
   },
 
+
+  calculateStateTax: (grossPay, stateCode) => {
+    const rate = STATE_TAX_RATES[stateCode] || 0;
+    return parseFloat((grossPay * rate).toFixed(2));
+  },
+
   calculateFIT: (grossPay, frequency, maritalStatus) => {
     const periodsPerYear = PAY_FREQUENCIES[frequency]?.periodsPerYear || 26;
     const annualized = grossPay * periodsPerYear;
@@ -278,15 +299,27 @@ addEarning: () => set((state) => ({
       }
     }
 
-    // update ytd for earnings based on elapsed periods
+    let effectivePeriods = elapsedPeriods;
+    if (state.ytdGrossOverridden && grossPay > 0) {
+      effectivePeriods = state.calculatedTotals.ytdGross / grossPay;
+    } else if (state.ytdGrossOverridden && grossPay === 0) {
+      effectivePeriods = 1;
+    }
+
     let calculatedYtdGross = 0;
     const updatedEarningsWithYtd = state.earnings.map(e => {
-       const newYtdTotal = e.currentTotal * elapsedPeriods;
+       const newYtdTotal = e.currentTotal * effectivePeriods;
        calculatedYtdGross += newYtdTotal;
        return { ...e, ytdTotal: parseFloat(newYtdTotal.toFixed(2)) };
     });
 
     set({ earnings: updatedEarningsWithYtd });
+
+    const updatedCustomDeductions = state.customDeductions.map(d => ({
+        ...d,
+        ytd: parseFloat(((d.amount || 0) * effectivePeriods).toFixed(2))
+    }));
+    set({ customDeductions: updatedCustomDeductions });
 
     let parsedYtd = state.ytdGrossOverridden ? state.calculatedTotals.ytdGross : parseFloat(calculatedYtdGross.toFixed(2));
 
@@ -294,8 +327,10 @@ addEarning: () => set((state) => ({
       parsedYtd = grossPay;
     }
     set((s) => ({ calculatedTotals: { ...s.calculatedTotals, ytdGross: parsedYtd } }));
+
     const fica = state.calculateFICA(grossPay, parsedYtd);
     const fit = state.calculateFIT(grossPay, state.payPeriod.frequency, state.employeeDetails.maritalStatus);
+    const sit = state.calculateStateTax(grossPay, state.employeeDetails.state);
 
     set((state) => ({
       calculatedTotals: {
@@ -307,13 +342,14 @@ addEarning: () => set((state) => ({
               socialSecurity: fica.socialSecurity,
               medicare: fica.medicare,
               federalIncomeTax: fit,
-              // Keep stateIncomeTax as it is since it's an override only
+              stateIncomeTax: sit,
             }
           : {
               ...state.calculatedTotals.taxes,
               socialSecurity: state.taxOverrides.socialSecurity ? state.calculatedTotals.taxes.socialSecurity : fica.socialSecurity,
               medicare: state.taxOverrides.medicare ? state.calculatedTotals.taxes.medicare : fica.medicare,
-              federalIncomeTax: state.taxOverrides.federalIncomeTax ? state.calculatedTotals.taxes.federalIncomeTax : fit
+              federalIncomeTax: state.taxOverrides.federalIncomeTax ? state.calculatedTotals.taxes.federalIncomeTax : fit,
+              stateIncomeTax: state.taxOverrides.stateIncomeTax ? state.calculatedTotals.taxes.stateIncomeTax : sit
             }
       }
     }));

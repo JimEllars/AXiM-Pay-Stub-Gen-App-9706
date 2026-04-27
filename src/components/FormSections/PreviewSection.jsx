@@ -4,10 +4,26 @@ import SafeIcon from '../../common/SafeIcon';
 import { FiDownload, FiLock } from 'react-icons/fi';
 
 const PreviewSection = ({ onFinalize }) => {
-  const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm } = usePayStubStore();
+  const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+      <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 mb-8 text-white">
+        <h3 className="text-sm font-black uppercase tracking-widest text-axim-teal mb-4 border-b border-white/10 pb-2">Select Theme</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {['AXiM Classic', 'Modern Slate', 'Clean Minimal'].map(t => (
+            <button
+              key={t}
+              onClick={() => updateTheme(t)}
+              className={`p-4 rounded-xl border text-sm font-bold uppercase tracking-wider transition-all ${theme === t ? 'bg-axim-teal text-black border-axim-teal' : 'bg-black/50 border-white/10 text-gray-400 hover:border-axim-teal hover:text-white'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="bg-white text-black p-8 md:p-12 rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative overflow-hidden">
         
         {/* Hardened Professional Watermark Overlay */}
