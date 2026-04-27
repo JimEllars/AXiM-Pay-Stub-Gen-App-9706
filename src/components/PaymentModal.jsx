@@ -25,6 +25,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
       return;
     }
     
+    if (planType === 'bundle') {
+       fetch('/api/v1/telemetry/ingest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event: "bundle_purchase_started" })
+       }).catch(console.error);
+    }
+
     setLoading(true);
 
     // PHASE 3: Fortify State Handoff

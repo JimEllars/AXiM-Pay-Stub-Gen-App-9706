@@ -24,17 +24,46 @@ const Success = () => {
     // 1. Get current store state
     const currentState = usePayStubStore.getState();
 
-    // 2. We need to increment dates. This logic is a simple approximation.
-    // In a real robust system, we would parse the frequency and add exact days.
-    // For MVP, we'll just clear the dates so the user is forced to pick the next period.
+    // 2. We need to increment dates.
+    const { frequency, startDate, endDate, payDate } = currentState.payPeriod;
+    let newStartDate = '';
+    let newEndDate = '';
+    let newPayDate = '';
+
+    const addDays = (dateStr, days) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr + 'T00:00:00');
+        d.setDate(d.getDate() + days);
+        return d.toISOString().split('T')[0];
+    };
+
+    if (startDate && endDate) {
+        let diff = 0;
+        if (frequency === 'weekly') diff = 7;
+        else if (frequency === 'bi-weekly') diff = 14;
+        else if (frequency === 'semi-monthly') diff = 15;
+        else if (frequency === 'monthly') diff = 30; // Approximation
+
+        newStartDate = addDays(endDate, 1);
+        newEndDate = addDays(newStartDate, diff - 1);
+    }
+
+    if (payDate) {
+        let diff = 0;
+        if (frequency === 'weekly') diff = 7;
+        else if (frequency === 'bi-weekly') diff = 14;
+        else if (frequency === 'semi-monthly') diff = 15;
+        else if (frequency === 'monthly') diff = 30; // Approximation
+        newPayDate = addDays(payDate, diff);
+    }
 
     const newDraft = {
         ...currentState,
         payPeriod: {
             ...currentState.payPeriod,
-            startDate: '',
-            endDate: '',
-            payDate: ''
+            startDate: newStartDate,
+            endDate: newEndDate,
+            payDate: newPayDate
         },
         calculatedTotals: {
             ...currentState.calculatedTotals,

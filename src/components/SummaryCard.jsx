@@ -3,15 +3,23 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import { FiChevronUp, FiChevronDown } from 'react-icons/fi';
 
 const SummaryCard = () => {
-  const { calculatedTotals, employerDetails, employeeDetails } = usePayStubStore();
+  const { calculatedTotals, employerDetails, employeeDetails, payPeriod } = usePayStubStore();
   const { currentGross, taxes, totalDeductions, netPay } = calculatedTotals;
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const today = new Date().setHours(0, 0, 0, 0);
+  const payDateObj = payPeriod?.payDate ? new Date(payPeriod.payDate + 'T00:00:00').getTime() : null;
+  const isPayDateValid = payDateObj && payDateObj <= today;
 
   const isMortgageReady =
     employerDetails?.ein?.length >= 9 &&
     employeeDetails?.ssnLast4?.length >= 4 &&
     employerDetails?.address?.length > 5 &&
-    employeeDetails?.address?.length > 5;
+    employeeDetails?.address?.length > 5 &&
+    isPayDateValid &&
+    calculatedTotals?.currentGross > 0;
+
+  const isProgressiveState = employeeDetails?.state && ['CA', 'NY'].includes(employeeDetails.state.toUpperCase());
 
 
   return (
@@ -24,10 +32,17 @@ const SummaryCard = () => {
           <div className={`w-3 h-3 rounded-full ${isMortgageReady ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]' : 'bg-gray-500'}`} />
           <div className="flex flex-col">
             <span className="text-[10px] font-bold uppercase tracking-widest">{isMortgageReady ? 'Mortgage/Rental Ready' : 'Draft Mode'}</span>
-            <span className="text-[9px] opacity-70">{isMortgageReady ? 'All required verification fields complete' : 'Missing EIN, SSN, or Address data'}</span>
+            <span className="text-[9px] opacity-70">{isMortgageReady ? 'All required verification fields complete' : 'Missing EIN, SSN, Address, valid Pay Date, or Gross Pay > $0'}</span>
           </div>
         </div>
 
+
+        {isProgressiveState && (
+          <div className="mb-6 p-3 rounded-lg border bg-yellow-500/10 border-yellow-500/30 text-yellow-400 text-xs flex items-start gap-2">
+            <span className="font-bold flex-shrink-0">Tax Accuracy Warning:</span>
+            <span>You selected {employeeDetails.state}, which has a progressive tax structure. Tax estimates shown here may vary from exact CPA values. Please verify values manually if needed.</span>
+          </div>
+        )}
 
         <div className="space-y-4 font-mono text-sm">
           <div className="flex justify-between items-center border-b border-white/10 pb-2">
