@@ -24,13 +24,8 @@ const Success = () => {
 
 
   const handleDuplicate = () => {
-    try {
-        fetch('/api/v1/telemetry/ingest', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ event: 'duplicate_clicked' })
-        });
-    } catch (e) { /* ignore */ }
+    fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'duplicate_rate' }) }).catch(() => {});
+
     // 1. Get current store state
     const currentState = usePayStubStore.getState();
 
@@ -40,32 +35,53 @@ const Success = () => {
     let newEndDate = '';
     let newPayDate = '';
 
+
     const addDays = (dateStr, days) => {
         if (!dateStr) return '';
-        const d = new Date(dateStr + 'T00:00:00');
-        d.setDate(d.getDate() + days);
-        return d.toISOString().split('T')[0];
+        // Use manual parts parsing to avoid timezone timezone-offset issues
+        const [y, m, d] = dateStr.split('-').map(Number);
+        const date = new Date(y, m - 1, d);
+        date.setDate(date.getDate() + days);
+        return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     };
 
     if (startDate && endDate) {
-        let diff = 0;
-        if (frequency === 'weekly') diff = 7;
-        else if (frequency === 'bi-weekly') diff = 14;
-        else if (frequency === 'semi-monthly') diff = 15;
-        else if (frequency === 'monthly') diff = 30; // Approximation
+        if (frequency === 'monthly') {
+             const [y1, m1, d1] = endDate.split('-').map(Number);
+             const endDt = new Date(y1, m1 - 1, d1);
+             // set new start date 1 day after old end date
+             const newStart = new Date(y1, m1 - 1, d1 + 1);
+             newStartDate = newStart.getFullYear() + '-' + String(newStart.getMonth() + 1).padStart(2, '0') + '-' + String(newStart.getDate()).padStart(2, '0');
 
-        newStartDate = addDays(endDate, 1);
-        newEndDate = addDays(newStartDate, diff - 1);
+             // set new end date to end of next month
+             const newEnd = new Date(newStart.getFullYear(), newStart.getMonth() + 1, 0); // 0 gives last day of previous month, so end of the month we are currently in based on start date
+             newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+        } else {
+             let diff = 0;
+             if (frequency === 'weekly') diff = 7;
+             else if (frequency === 'bi-weekly') diff = 14;
+             else if (frequency === 'semi-monthly') diff = 15; // standard approximation or could use 15/16 but we stick to exact add
+
+             newStartDate = addDays(startDate, diff);
+             newEndDate = addDays(endDate, diff);
+        }
     }
 
     if (payDate) {
-        let diff = 0;
-        if (frequency === 'weekly') diff = 7;
-        else if (frequency === 'bi-weekly') diff = 14;
-        else if (frequency === 'semi-monthly') diff = 15;
-        else if (frequency === 'monthly') diff = 30; // Approximation
-        newPayDate = addDays(payDate, diff);
+        if (frequency === 'monthly') {
+             const [y1, m1, d1] = payDate.split('-').map(Number);
+             // increment month
+             const nextPay = new Date(y1, m1, d1);
+             newPayDate = nextPay.getFullYear() + '-' + String(nextPay.getMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getDate()).padStart(2, '0');
+        } else {
+            let diff = 0;
+            if (frequency === 'weekly') diff = 7;
+            else if (frequency === 'bi-weekly') diff = 14;
+            else if (frequency === 'semi-monthly') diff = 15;
+            newPayDate = addDays(payDate, diff);
+        }
     }
+
 
     const newDraft = {
         ...currentState,
@@ -134,6 +150,31 @@ const Success = () => {
           } else if (rawDraft) {
             parsedDraft = JSON.parse(rawDraft);
             hydrateStore(parsedDraft);
+          }
+
+
+          if (data.metadata?.documentType === "pay_stub_bundle_v1" || sessionStorage.getItem("axim_paystub_plan_type") === "bundle") {
+            try {
+              // Add 6 Document Credits to user profile via Quest Labs API
+              const userId = sessionStorage.getItem('paystub_delivery_email') || searchParams.get('session_id');
+              fetch(`https://api.questlabs.io/v1/users/${userId}/credits`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer YOUR_API_KEY`,
+                },
+                body: JSON.stringify({
+                  creditsToAdd: 6,
+                  creditType: 'DOCUMENT_CREDITS',
+                  description: 'Streamlined bundle redemption bonus'
+                })
+              }).catch(console.error);
+
+              // Also store locally for immediate sync
+              localStorage.setItem('axim_document_credits', '6');
+            } catch (e) {
+              console.error('Failed to add credits via Quest', e);
+            }
           }
 
           setStatus('success');
@@ -214,18 +255,15 @@ const Success = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'AXiM_PayStub.pdf';
+      a.download = 'PayStub.pdf';
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
+      fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'time_to_first_download' }) }).catch(() => {});
 
       // Telemetry Sync
-      fetch('/api/v1/telemetry/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: "document_generated", type: "pay_stub", session_id: searchParams.get('session_id') })
-      }).catch(console.error);
+
 
       if (window.dataLayer) {
          window.dataLayer.push({ event: "document_generated", type: "pay_stub", session_id: searchParams.get('session_id') });

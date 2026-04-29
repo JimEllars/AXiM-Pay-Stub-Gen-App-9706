@@ -65,11 +65,7 @@ const EmployeeSection = () => {
                     }
                   } catch (e) {
                     console.error('ZIP lookup failed', e);
-                    fetch('/api/v1/telemetry/ingest', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ event: "zip_lookup_failed", zipCode: zip, error: e.message })
-                    }).catch(console.error);
+
                   } finally {
                     setIsZipLoading(false);
                   }

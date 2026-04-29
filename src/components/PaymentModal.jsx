@@ -28,19 +28,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
       return;
     }
     
-    if (planType === 'bundle') {
-       fetch('/api/v1/telemetry/ingest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event: "bundle_purchase_started" })
-       }).catch(console.error);
-    }
+
 
     setLoading(true);
 
     // PHASE 3: Fortify State Handoff
     // Serialize and store the entire application state before redirecting to Stripe
     sessionStorage.setItem('paystub_delivery_email', email);
+    sessionStorage.setItem('axim_paystub_plan_type', planType);
 
     // Explicitly select the state keys we want to store, to avoid storing actions/functions
     const stateToStore = {

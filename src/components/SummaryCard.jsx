@@ -28,13 +28,36 @@ const SummaryCard = () => {
       <div className="hidden lg:block sticky top-8 bg-glass border border-white/10 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
         <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider">Live Summary</h3>
 
-        <div className={`mb-6 p-3 rounded-lg border flex items-center gap-3 ${isMortgageReady ? 'bg-green-500/10 border-green-500/30 text-green-400' : 'bg-gray-500/10 border-gray-500/30 text-gray-400'}`}>
-          <div className={`w-3 h-3 rounded-full ${isMortgageReady ? 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.5)]' : 'bg-gray-500'}`} />
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold uppercase tracking-widest">{isMortgageReady ? 'Mortgage/Rental Ready' : 'Draft Mode'}</span>
-            <span className="text-[9px] opacity-70">{isMortgageReady ? 'All required verification fields complete' : 'Missing EIN, SSN, Address, valid Pay Date, or Gross Pay > $0'}</span>
+
+        <div className={`mb-6 p-3 rounded-lg border ${isMortgageReady ? 'bg-green-500/10 border-green-500/30' : 'bg-gray-500/10 border-gray-500/30'}`}>
+          <div className="flex flex-col gap-2">
+            <span className={`text-[10px] font-bold uppercase tracking-widest ${isMortgageReady ? 'text-green-400' : 'text-gray-400'}`}>
+              {isMortgageReady ? 'Mortgage/Rental Ready' : 'Document Checklist'}
+            </span>
+            <div className="flex flex-col gap-1 text-[9px] opacity-80">
+               <div className="flex items-center gap-1">
+                 <div className={`w-2 h-2 rounded-full ${(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'bg-green-400' : 'bg-gray-500'}`} />
+                 <span className={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'text-green-400' : 'text-gray-400'}>Address OK</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <div className={`w-2 h-2 rounded-full ${(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'bg-green-400' : 'bg-gray-500'}`} />
+                 <span className={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'text-green-400' : 'text-gray-400'}>Tax ID OK</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <div className={`w-2 h-2 rounded-full ${isPayDateValid ? 'bg-green-400' : 'bg-gray-500'}`} />
+                 <span className={isPayDateValid ? 'text-green-400' : 'text-gray-400'}>Pay Date OK</span>
+               </div>
+               <div className="flex items-center gap-1">
+                 <div className={`w-2 h-2 rounded-full ${(calculatedTotals?.currentGross > 0) ? 'bg-green-400' : 'bg-gray-500'}`} />
+                 <span className={(calculatedTotals?.currentGross > 0) ? 'text-green-400' : 'text-gray-400'}>Gross Pay OK</span>
+               </div>
+            </div>
+            {isMortgageReady && (
+              <span className="text-[9px] text-green-400 mt-1 opacity-90 border-t border-green-500/30 pt-1">Document meets standard requirements for rental or loan applications.</span>
+            )}
           </div>
         </div>
+
 
 
         {isProgressiveState && (
