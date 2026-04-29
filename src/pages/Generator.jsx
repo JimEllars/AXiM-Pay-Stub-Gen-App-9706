@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmployerSection from '../components/FormSections/EmployerSection';
@@ -18,16 +19,19 @@ const STEPS = [
 ];
 
 const Generator = () => {
+
   const storeState = usePayStubStore();
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
+  const [isShimmering, setIsShimmering] = useState(false);
 
   useEffect(() => {
     // Only generate preview if we have some basic data
     if (!storeState.employerDetails.name && !storeState.employeeDetails.name) return;
 
     const generatePreview = async () => {
+      setIsShimmering(true);
       setIsPreviewLoading(true);
       setPreviewError(null);
       try {
@@ -65,6 +69,7 @@ const Generator = () => {
         console.error("Preview generation error:", err);
       } finally {
         setIsPreviewLoading(false);
+        setTimeout(() => setIsShimmering(false), 500);
       }
     };
 
@@ -83,6 +88,7 @@ const Generator = () => {
   ]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const validateForm = usePayStubStore((state) => state.validateForm);
 
   const employerDetails = usePayStubStore((state) => state.employerDetails);
@@ -195,26 +201,39 @@ const Generator = () => {
         <div className="lg:w-1/2 hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-8rem)]">
           <SummaryCard />
           <div className="flex-1 bg-glass border border-white/10 rounded-xl backdrop-blur-md overflow-hidden relative flex flex-col">
+
             <div className="bg-white/5 border-b border-white/10 p-3 flex justify-between items-center z-10">
               <h3 className="text-sm font-bold text-axim-teal uppercase tracking-wider flex items-center gap-2">
                 Live Preview
                 {isPreviewLoading && <FiLoader className="animate-spin text-axim-gold" />}
               </h3>
+              <div className="flex gap-2">
+                 <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="bg-black/50 hover:bg-white/10 px-2 py-1 rounded text-xs border border-white/10">-</button>
+                 <span className="text-xs flex items-center">{Math.round(zoom * 100)}%</span>
+                 <button onClick={() => setZoom(z => Math.min(2, z + 0.1))} className="bg-black/50 hover:bg-white/10 px-2 py-1 rounded text-xs border border-white/10">+</button>
+              </div>
             </div>
 
-            <div className="flex-1 bg-[#525659] relative w-full h-full flex items-center justify-center">
+            <div className="flex-1 bg-[#525659] relative w-full h-full flex items-center justify-center overflow-auto p-4">
                {previewError && (
                  <div className="absolute inset-0 z-20 bg-black/80 flex flex-col items-center justify-center text-center p-6 backdrop-blur-sm">
                     <FiAlertTriangle className="text-axim-gold text-4xl mb-4" />
                     <p className="text-white font-bold">{previewError}</p>
                  </div>
                )}
+               {isShimmering && (
+                  <div className="absolute inset-0 z-10 bg-white/10 backdrop-blur-sm flex items-center justify-center animate-pulse">
+                     <div className="w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_1s_infinite]"></div>
+                  </div>
+               )}
                {previewUrl ? (
-                 <iframe
-                   src={previewUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
-                   className="w-full h-full absolute inset-0 z-0 border-none"
-                   title="PDF Preview"
-                 />
+                 <div style={{ transform: `scale(${zoom})`, transformOrigin: 'top center', width: '100%', height: '100%', transition: 'transform 0.2s' }}>
+                   <iframe
+                     src={previewUrl + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH'}
+                     className="w-full h-full border-none shadow-2xl bg-white"
+                     title="PDF Preview"
+                   />
+                 </div>
                ) : (
                  <div className="text-gray-400 text-sm flex flex-col items-center">
                     {!isPreviewLoading && "Start typing to generate preview"}
@@ -228,7 +247,6 @@ const Generator = () => {
             </div>
           </div>
         </div>
-
       </div>
 
       <PaymentModal 
