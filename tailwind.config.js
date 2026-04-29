@@ -6,6 +6,11 @@ export default {
   ],
   theme: {
     extend: {
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      },
       colors: {
         'axim-teal': '#00e5ff',
         'axim-gold': '#ffea00',

@@ -1,3 +1,5 @@
+import { syncDraftQueueToProfile } from '../store/usePayStubStore';
+
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
@@ -6,6 +8,7 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import { useNavigate } from 'react-router-dom';
 
 const PaymentModal = ({ isOpen, onClose }) => {
+
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [planType, setPlanType] = useState('single');
@@ -54,6 +57,8 @@ const PaymentModal = ({ isOpen, onClose }) => {
        let queue = existingQueueStr ? JSON.parse(existingQueueStr) : [];
        queue.push(stateToStore);
        sessionStorage.setItem('axim_paystub_draft_queue', JSON.stringify(queue));
+       syncDraftQueueToProfile(queue);
+
 
        if (queue.length < 6) {
           // Alert user they can add more or proceed. For better UX, we'll confirm

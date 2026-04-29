@@ -15,7 +15,18 @@ const PreviewSection = ({ onFinalize }) => {
           {['AXiM Classic', 'Modern Slate', 'Clean Minimal'].map(t => (
             <button
               key={t}
-              onClick={() => updateTheme(t)}
+
+              onClick={() => {
+                 updateTheme(t);
+                 try {
+                     fetch('/api/v1/telemetry/ingest', {
+                         method: 'POST',
+                         headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({ event: 'theme_changed', theme: t })
+                     });
+                 } catch (e) { /* ignore */ }
+              }}
+
               className={`p-4 rounded-xl border text-sm font-bold uppercase tracking-wider transition-all ${theme === t ? 'bg-axim-teal text-black border-axim-teal' : 'bg-black/50 border-white/10 text-gray-400 hover:border-axim-teal hover:text-white'}`}
             >
               {t}

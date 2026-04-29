@@ -133,7 +133,7 @@ export default {
      */
 
 
-    async function generatePdf(formData, isPreview, masterPdfDoc) {
+    async function generatePdf(formData, isPreview, masterPdfDoc, sessionId) {
       const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, theme } = formData;
       const activeTheme = theme || 'AXiM Classic';
 
@@ -369,6 +369,10 @@ export default {
       drawText(`Document Ref: ${docId}`, 40, 30, 8, false, rgb(0.5, 0.5, 0.5));
       drawText(`Generated: ${generationTime}`, 40, 20, 8, false, rgb(0.5, 0.5, 0.5));
 
+      pdfDoc.setTitle('AXiM Pay Stub - ' + docId);
+      pdfDoc.setSubject(sessionId ? `Session: ${sessionId}` : 'Draft');
+      pdfDoc.setKeywords([docId, sessionId, 'axim-systems']);
+
       return { pdfDoc, docId };
     }
 
@@ -406,7 +410,7 @@ export default {
            throw new Error("Missing formData");
         }
 
-        const { pdfDoc } = await generatePdf(formData, true);
+        const { pdfDoc } = await generatePdf(formData, true, null, null);
         const pdfBytes = await pdfDoc.save();
 
         return new Response(pdfBytes, {
@@ -462,10 +466,10 @@ export default {
            docId = 'AXIM-BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
            for (const data of formData) {
-             await generatePdf(data, false, finalPdfDoc);
+             await generatePdf(data, false, finalPdfDoc, session_id);
            }
         } else {
-           const res = await generatePdf(formData, false);
+           const res = await generatePdf(formData, false, null, session_id);
            finalPdfDoc = res.pdfDoc;
            docId = res.docId;
         }
@@ -568,6 +572,8 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
             session_id,
             email,
             documentType: 'pay_stub',
+            templateId: 'axim_premium_delivery',
+            theme: formData?.theme || 'AXiM Classic',
             formData
           }),
         });

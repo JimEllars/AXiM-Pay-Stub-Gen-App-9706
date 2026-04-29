@@ -1,3 +1,5 @@
+import { syncDraftQueueToProfile } from '../store/usePayStubStore';
+
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -20,7 +22,15 @@ const Success = () => {
   const navigate = useNavigate();
   const recalculateAll = usePayStubStore(state => state.recalculateAll);
 
+
   const handleDuplicate = () => {
+    try {
+        fetch('/api/v1/telemetry/ingest', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event: 'duplicate_clicked' })
+        });
+    } catch (e) { /* ignore */ }
     // 1. Get current store state
     const currentState = usePayStubStore.getState();
 
