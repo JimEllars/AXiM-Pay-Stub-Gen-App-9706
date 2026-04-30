@@ -5,6 +5,8 @@ import { FiDownload, FiLock } from 'react-icons/fi';
 
 const PreviewSection = ({ onFinalize }) => {
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
+  const creditsStr = localStorage.getItem('axim_document_credits') || '0';
+  const credits = parseInt(creditsStr, 10);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -12,19 +14,13 @@ const PreviewSection = ({ onFinalize }) => {
       <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 mb-8 text-white">
         <h3 className="text-sm font-black uppercase tracking-widest text-axim-teal mb-4 border-b border-white/10 pb-2">Select Theme</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {['AXiM Classic', 'Modern Slate', 'Clean Minimal'].map(t => (
+          {['Standard Professional', 'Modern Slate', 'Clean Minimal'].map(t => (
             <button
               key={t}
 
               onClick={() => {
                  updateTheme(t);
-                 try {
-                     fetch('/api/v1/telemetry/ingest', {
-                         method: 'POST',
-                         headers: { 'Content-Type': 'application/json' },
-                         body: JSON.stringify({ event: 'theme_changed', theme: t })
-                     });
-                 } catch (e) { /* ignore */ }
+
               }}
 
               className={`p-4 rounded-xl border text-sm font-bold uppercase tracking-wider transition-all ${theme === t ? 'bg-axim-teal text-black border-axim-teal' : 'bg-black/50 border-white/10 text-gray-400 hover:border-axim-teal hover:text-white'}`}
@@ -216,19 +212,27 @@ const PreviewSection = ({ onFinalize }) => {
               alert("Failed to generate preview: " + err.message);
             }
           }}
-          className="group w-full sm:w-auto bg-transparent border border-axim-teal text-axim-teal font-black px-10 py-5 rounded-2xl hover:bg-axim-teal hover:text-bg-void transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_15px_rgba(0,229,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
+          className="hidden lg:flex group w-full sm:w-auto bg-transparent border border-axim-teal text-axim-teal font-black px-10 py-5 rounded-2xl hover:bg-axim-teal hover:text-bg-void transition-all duration-500 items-center justify-center gap-3 shadow-[0_0_15px_rgba(0,229,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={!validateForm()}
         >
           Preview Draft
         </button>
         <button 
-          onClick={onFinalize}
+          onClick={() => {
+            if (credits > 0) {
+              localStorage.setItem('axim_document_credits', String(credits - 1));
+              fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'bundle_redemption_frequency' }) }).catch(() => {});
+              window.location.href = `/success?session_id=credit_redemption_${Date.now()}`;
+            } else {
+              onFinalize();
+            }
+          }}
 
           className="group w-full sm:w-auto bg-axim-teal text-bg-void font-black px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-axim-teal"
           disabled={!validateForm()}
         >
           <SafeIcon icon={FiDownload} />
-          Finalize & Download
+          {credits > 0 ? `Use 1 Credit to Download (${credits} left)` : "Finalize & Download"}
         </button>
       </div>
     </div>

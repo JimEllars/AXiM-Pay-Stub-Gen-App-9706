@@ -88,7 +88,7 @@ const Generator = () => {
   ]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [zoom, setZoom] = useState(1);
+  const [zoom, setZoom] = useState(typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 1);
   const validateForm = usePayStubStore((state) => state.validateForm);
 
   const employerDetails = usePayStubStore((state) => state.employerDetails);
@@ -198,7 +198,7 @@ const Generator = () => {
 
         {/* Right Column - Live Summary (30%) */}
 
-        <div className="lg:w-1/2 hidden lg:flex flex-col gap-6 sticky top-24 h-[calc(100vh-8rem)]">
+        <div className={`lg:w-1/2 flex-col gap-6 sticky top-24 lg:h-[calc(100vh-8rem)] h-[60vh] ${currentStep === 4 ? 'flex' : 'hidden lg:flex'}`}>
           <SummaryCard />
           <div className="flex-1 bg-glass border border-white/10 rounded-xl backdrop-blur-md overflow-hidden relative flex flex-col">
 

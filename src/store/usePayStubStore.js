@@ -57,13 +57,7 @@ const calculateProgressiveTax = (annualizedGross, stateCode) => {
   }
 
   // Telemetry Call inside Progressive Calculation
-  try {
-     fetch('/api/v1/telemetry/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ event: 'progressive_tax_calculated', state: stateCode, tax })
-     });
-  } catch (e) { /* ignore */ }
+
 
   return tax;
 };
@@ -97,7 +91,7 @@ const initialFormState = {
   ],
   customDeductions: [],
   taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
-  theme: 'AXiM Classic',
+  theme: 'Standard Professional',
   autoCalculate: true,
   calculatedTotals: {
     currentGross: 0.00,
@@ -110,18 +104,7 @@ const initialFormState = {
 
 
 export const syncDraftQueueToProfile = async (queue) => {
-    try {
-        await fetch('/api/v1/telemetry/ingest', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                event: 'sync_draft_queue',
-                metadata: { axim_paystub_draft_queue: queue }
-            })
-        });
-    } catch (e) {
-        console.error("Failed to sync draft queue", e);
-    }
+
 };
 
 export const usePayStubStore = create(persist((set, get) => ({
@@ -207,6 +190,7 @@ export const usePayStubStore = create(persist((set, get) => ({
           const start = new Date(year, month - 1, day);
           let daysToAdd = 0;
 
+
           if (newPayPeriod.frequency === 'weekly') {
             daysToAdd = 6;
           } else if (newPayPeriod.frequency === 'bi-weekly') {
@@ -238,6 +222,7 @@ export const usePayStubStore = create(persist((set, get) => ({
             payD.setDate(payD.getDate() + 2);
             newPayPeriod.payDate = formatD(payD);
           }
+
         }
       }
       return { payPeriod: newPayPeriod };
