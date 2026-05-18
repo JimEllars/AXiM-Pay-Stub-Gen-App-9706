@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
 /**
- * AXiM Systems Edge Proxy - Production v1.0
+ * Generic Edge Proxy - Production v1.0
  * Handles Stripe orchestration, session verification, and PDF generation stubs.
  */
 
@@ -47,7 +47,7 @@ export default {
            throw new Error("Missing API Key");
         }
 
-                // Proxy to AXiM Core Billing Engine
+                // Proxy to Core Billing Engine
         const stripeResponse = await fetch(`${apiBase}/functions/create-checkout-session`, {
           method: 'POST',
           headers: {
@@ -377,7 +377,7 @@ export default {
 
       pdfDoc.setTitle('Pay Stub - ' + docId);
       pdfDoc.setSubject(sessionId ? `Session: ${sessionId}` : 'Draft');
-      pdfDoc.setKeywords([docId, sessionId, 'axim-systems']);
+      pdfDoc.setKeywords([docId, sessionId, 'pay-stub']);
 
       return { pdfDoc, docId };
     }
@@ -434,6 +434,35 @@ export default {
       }
     }
 
+
+    if (url.pathname === '/api/grant-credits' && request.method === 'POST') {
+      try {
+        const body = await request.json();
+        const { userId, creditsToAdd, creditType, description, session_id } = body;
+
+        // Basic session validation
+        if (!session_id || (!session_id.startsWith('cs_') && !session_id.startsWith('credit_redemption_'))) {
+           return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 403, headers: corsHeaders });
+        }
+
+        const questResponse = await fetch(`https://api.questlabs.io/v1/users/${userId}/credits`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${env.QUEST_LABS_API_KEY}`,
+            'app-id': env.QUEST_LABS_APP_ID || ''
+          },
+          body: JSON.stringify({ creditsToAdd, creditType, description })
+        });
+
+        const data = await questResponse.json();
+        return new Response(JSON.stringify(data), { headers: corsHeaders });
+      } catch (e) {
+        console.error('Grant credits error:', e);
+        return new Response(JSON.stringify({ error: 'Failed to grant credits' }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     if (url.pathname === '/api/generate-paystub' && request.method === 'POST') {
       try {
         const { session_id, formData } = await request.json();
@@ -471,7 +500,7 @@ export default {
         if (Array.isArray(formData)) {
            // It's a batch! Progressive Streaming (direct page addition)
            finalPdfDoc = await PDFDocument.create();
-           docId = 'AXIM-BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+           docId = 'BATCH-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 
            for (const data of formData) {
              await generatePdf(data, false, finalPdfDoc, session_id);
@@ -548,7 +577,7 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
           }
         }
 
-        // Proxy to AXiM Core Document Orchestrator
+        // Proxy to Core Document Orchestrator
         const emailResponse = await fetch(`${apiBase}/functions/document-orchestrator`, {
           method: 'POST',
           headers: {
@@ -589,7 +618,7 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
       try {
         const payload = await request.json();
 
-        // Proxy to AXiM Core Telemetry
+        // Proxy to Core Telemetry
         // Fire and forget or await, but return success locally quickly
 
 
@@ -605,7 +634,7 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
     }
 
 
-    return new Response('AXiM Systems Proxy: Endpoint Not Found', { status: 404, headers: corsHeaders });
+    return new Response('Proxy: Endpoint Not Found', { status: 404, headers: corsHeaders });
 
   }
 };

@@ -104,8 +104,12 @@ const initialFormState = {
 
 
 export const syncDraftQueueToProfile = async (queue) => {
-
-};
+    fetch('/api/save-draft-queue', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ queue })
+    }).catch(() => {});
+  };
 
 export const usePayStubStore = create(persist((set, get) => ({
 

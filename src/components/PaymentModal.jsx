@@ -1,3 +1,4 @@
+import { BRANDING } from '../config/branding';
 import { syncDraftQueueToProfile } from '../store/usePayStubStore';
 
 import React, { useState } from 'react';
@@ -98,7 +99,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
       }
     } catch (e) {
       console.error("Payment Initialization Failed:", e);
-      alert(`Billing Gateway Error: ${e.message}. Please try again or contact support@axim.us.com`);
+      alert(`Billing Gateway Error: ${e.message}. Please try again or contact ${BRANDING.supportEmail}`);
     } finally {
       setLoading(false);
     }
@@ -156,7 +157,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
                   <p className="text-sm text-white font-medium">Single Pay Stub</p>
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">One-time Generation</p>
                 </div>
-                <span className="text-axim-gold font-mono font-black text-xl">$4.00</span>
+                <span className="text-axim-gold font-mono font-black text-xl">{BRANDING.singlePrice}</span>
               </button>
 
               <button
@@ -165,10 +166,10 @@ const PaymentModal = ({ isOpen, onClose }) => {
               >
                 <div className="absolute top-0 right-0 bg-axim-gold text-black text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-bl-lg">Most Popular</div>
                 <div>
-                  <p className="text-sm text-white font-medium flex items-center gap-2">Buy 5, Get 1 Free <span className="bg-axim-teal text-black text-[9px] px-1.5 py-0.5 rounded font-black">+1</span></p>
+                  <p className="text-sm text-white font-medium flex items-center gap-2">Buy {BRANDING.bundleCredits - 1}, Get 1 Free <span className="bg-axim-teal text-black text-[9px] px-1.5 py-0.5 rounded font-black">+1</span></p>
                   <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">6 Credits Added to Account</p>
                 </div>
-                <span className="text-axim-gold font-mono font-black text-xl">$20.00</span>
+                <span className="text-axim-gold font-mono font-black text-xl">{BRANDING.bundlePrice}</span>
               </button>
             </div>
 

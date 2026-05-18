@@ -1,3 +1,6 @@
+import { trackEvent } from '../utils/telemetry';
+import { useCredits } from '../utils/useCredits';
+import { BRANDING } from '../config/branding';
 import { syncDraftQueueToProfile } from '../store/usePayStubStore';
 
 import React, { useEffect, useState } from 'react';
@@ -9,6 +12,7 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import confetti from 'canvas-confetti';
 
 const Success = () => {
+  const { credits, addCredits } = useCredits();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
@@ -24,7 +28,7 @@ const Success = () => {
 
 
   const handleDuplicate = () => {
-    fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'duplicate_rate' }) }).catch(() => {});
+    trackEvent('duplicate_rate');
 
     // 1. Get current store state
     const currentState = usePayStubStore.getState();
@@ -48,8 +52,7 @@ const Success = () => {
     if (startDate && endDate) {
         if (frequency === 'monthly') {
              const [y1, m1, d1] = endDate.split('-').map(Number);
-             const endDt = new Date(y1, m1 - 1, d1);
-             // set new start date 1 day after old end date
+                          // set new start date 1 day after old end date
              const newStart = new Date(y1, m1 - 1, d1 + 1);
              newStartDate = newStart.getFullYear() + '-' + String(newStart.getMonth() + 1).padStart(2, '0') + '-' + String(newStart.getDate()).padStart(2, '0');
 
@@ -60,10 +63,29 @@ const Success = () => {
              let diff = 0;
              if (frequency === 'weekly') diff = 7;
              else if (frequency === 'bi-weekly') diff = 14;
-             else if (frequency === 'semi-monthly') diff = 15; // standard approximation or could use 15/16 but we stick to exact add
+             else if (frequency === 'semi-monthly') {
 
-             newStartDate = addDays(startDate, diff);
-             newEndDate = addDays(endDate, diff);
+             // Calendar-aware semi-monthly logic
+             const [sY, sM, sD] = startDate.split('-').map(Number);
+             const [eY, eM, eD] = endDate.split('-').map(Number);
+
+             if (sD === 1) {
+                 // 1st-15th -> next is 16th to end of month
+                 newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
+                 const lastDay = new Date(sY, sM, 0).getDate();
+                 newEndDate = `${eY}-${String(eM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+             } else {
+                 // 16th-end -> next is 1st to 15th of next month
+                 const nextMonth = sM === 12 ? 1 : sM + 1;
+                 const nextYear = sM === 12 ? sY + 1 : sY;
+                 newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                 newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
+             }
+
+             } else {
+                 newStartDate = addDays(startDate, diff);
+                 newEndDate = addDays(endDate, diff);
+             }
         }
     }
 
@@ -77,14 +99,19 @@ const Success = () => {
             let diff = 0;
             if (frequency === 'weekly') diff = 7;
             else if (frequency === 'bi-weekly') diff = 14;
-            else if (frequency === 'semi-monthly') diff = 15;
-            newPayDate = addDays(payDate, diff);
+            else if (frequency === 'semi-monthly') {
+             // simplified logic for pay date (add 15 days, wait instructions didn't specify paydate snap)
+             newPayDate = addDays(payDate, 15);
+            } else {
+              newPayDate = addDays(payDate, diff);
+            }
         }
     }
 
 
     const newDraft = {
         ...currentState,
+        theme: currentState.theme || BRANDING.defaultTheme,
         payPeriod: {
             ...currentState.payPeriod,
             startDate: newStartDate,
@@ -156,22 +183,21 @@ const Success = () => {
           if (data.metadata?.documentType === "pay_stub_bundle_v1" || sessionStorage.getItem("axim_paystub_plan_type") === "bundle") {
             try {
               // Add 6 Document Credits to user profile via Quest Labs API
-              const userId = sessionStorage.getItem('paystub_delivery_email') || searchParams.get('session_id');
-              fetch(`https://api.questlabs.io/v1/users/${userId}/credits`, {
+              const userId = localStorage.getItem('axim_user_id') || searchParams.get('session_id');
+              fetch('/api/grant-credits', {
                 method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer YOUR_API_KEY`,
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                  userId,
                   creditsToAdd: 6,
                   creditType: 'DOCUMENT_CREDITS',
-                  description: 'Streamlined bundle redemption bonus'
+                  description: 'Streamlined bundle redemption bonus',
+                  session_id: sessionId
                 })
               }).catch(console.error);
 
               // Also store locally for immediate sync
-              localStorage.setItem('axim_document_credits', '6');
+              addCredits(6);
             } catch (e) {
               console.error('Failed to add credits via Quest', e);
             }
@@ -260,7 +286,7 @@ const Success = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'time_to_first_download' }) }).catch(() => {});
+      trackEvent('time_to_first_download');
 
       // Telemetry Sync
 
@@ -300,7 +326,7 @@ const Success = () => {
         </div>
         <h2 className="text-4xl font-black tracking-tighter mb-4">VERIFICATION FAILED</h2>
         <p className="text-gray-400 max-w-md mx-auto mb-10 leading-relaxed">
-          We could not verify your payment session. {errorMessage && <span className="block mt-2 text-red-400">{errorMessage}</span>} If you believe this is an error, please contact our enterprise support team.
+          We could not verify your payment session. {errorMessage && <span className="block mt-2 text-red-400">{errorMessage}</span>} If you believe this is an error, please contact support at {BRANDING.supportEmail}.
         </p>
         <Link to="/app/generator" className="bg-white text-black font-bold px-10 py-5 rounded-2xl hover:bg-axim-teal transition-all">
           Return to Generator
@@ -325,6 +351,17 @@ const Success = () => {
         </div>
 
         <h1 className="text-4xl font-black text-white mb-4 tracking-tight">ORDER COMPLETE</h1>
+
+        {credits > 0 && (
+          <div className="bg-axim-teal/10 border border-axim-teal p-4 rounded-xl mb-6">
+            <p className="text-axim-teal font-bold mb-2">🎉 {credits >= 6 ? '6 document credits added to your account' : 'Credits Available'}</p>
+            <p className="text-sm text-white mb-4">Current Balance: {credits} credits</p>
+            <Link to="/app/generator" className="inline-block bg-axim-teal text-black font-bold px-6 py-2 rounded-lg hover:bg-white transition-all text-sm">
+              Use a Credit
+            </Link>
+          </div>
+        )}
+
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>

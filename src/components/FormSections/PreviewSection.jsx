@@ -1,3 +1,4 @@
+import { useCredits } from '../../utils/useCredits';
 import React from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import SafeIcon from '../../common/SafeIcon';
@@ -5,8 +6,7 @@ import { FiDownload, FiLock } from 'react-icons/fi';
 
 const PreviewSection = ({ onFinalize }) => {
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
-  const creditsStr = localStorage.getItem('axim_document_credits') || '0';
-  const credits = parseInt(creditsStr, 10);
+  const { credits } = useCredits();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
