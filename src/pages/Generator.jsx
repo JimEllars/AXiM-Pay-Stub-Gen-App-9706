@@ -89,7 +89,8 @@ const Generator = () => {
     storeState.customDeductions,
     storeState.calculatedTotals
   ]);
-  const [currentStep, setCurrentStep] = useState(1);
+  const currentStep = usePayStubStore((state) => state.currentStep);
+  const setCurrentStep = usePayStubStore((state) => state.setCurrentStep);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [zoom, setZoom] = useState(typeof window !== 'undefined' && window.innerWidth < 1024 ? 0.7 : 1);
   const validateForm = usePayStubStore((state) => state.validateForm);
@@ -97,6 +98,8 @@ const Generator = () => {
   const employerDetails = usePayStubStore((state) => state.employerDetails);
   const employeeDetails = usePayStubStore((state) => state.employeeDetails);
   const payPeriod = usePayStubStore((state) => state.payPeriod);
+
+  const setCurrentStepInStore = usePayStubStore((state) => state.setCurrentStep);
 
   const isNextDisabled = () => {
     if (currentStep === 1) return !employerDetails.name;

@@ -529,6 +529,24 @@ export default {
           }).catch(e => console.error("Vault upload failed:", e))
         );
 
+        // Telemetry logging for revenue_generated
+        ctx.waitUntil(
+          fetch(`${apiBase}/v1/telemetry/ingest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+            },
+            body: JSON.stringify({
+              event: 'revenue_generated',
+              type: 'pay_stub',
+              session_id,
+              amount: session_id.startsWith('credit_redemption_') ? 0.00 : (Array.isArray(formData) ? 20.00 : 4.00),
+              trace_id: docId
+            })
+          }).catch(e => console.error("Telemetry logging failed:", e))
+        );
+
 
         return new Response(pdfBytes, {
           headers: {

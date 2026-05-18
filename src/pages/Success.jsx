@@ -12,7 +12,7 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import confetti from 'canvas-confetti';
 
 const Success = () => {
-  const { credits, addCredits } = useCredits();
+  const { credits, addCredits, consumeCredit } = useCredits();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
@@ -246,6 +246,10 @@ const Success = () => {
   useEffect(() => {
     if (status === 'success' && !downloading && !autoDownloaded) {
       setAutoDownloaded(true);
+      if (searchParams.get('session_id') && !searchParams.get('session_id').startsWith('credit_redemption_')) {
+         // Deduct 1 credit for the auto-download if this was a new bundle purchase.
+         consumeCredit();
+      }
       handleDownload();
     }
   }, [status]);

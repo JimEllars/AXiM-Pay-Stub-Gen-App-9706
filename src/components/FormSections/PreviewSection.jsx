@@ -6,7 +6,7 @@ import { FiDownload, FiLock } from 'react-icons/fi';
 
 const PreviewSection = ({ onFinalize }) => {
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
-  const { credits } = useCredits();
+  const { credits, consumeCredit, addCredits } = useCredits();
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -218,11 +218,37 @@ const PreviewSection = ({ onFinalize }) => {
           Preview Draft
         </button>
         <button 
-          onClick={() => {
+          onClick={async () => {
             if (credits > 0) {
-              localStorage.setItem('axim_document_credits', String(credits - 1));
+              consumeCredit();
               fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'bundle_redemption_frequency' }) }).catch(() => {});
-              window.location.href = `/success?session_id=credit_redemption_${Date.now()}`;
+
+              try {
+                const formData = usePayStubStore.getState();
+                const session_id = 'credit_redemption_' + Date.now();
+                const res = await fetch('/api/generate-paystub', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ formData, session_id })
+                });
+                if (!res.ok) throw new Error("Paystub generation failed");
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'PayStub.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
+                // Also trigger success redirect?
+                // The prompt says: "Clicking this should directly issue a fetch request to /api/generate-paystub passing an auto-generated token string prefixed with credit_redemption_ instead of initiating a Stripe Checkout sequence."
+              } catch (err) {
+                alert("Failed to generate paystub: " + err.message);
+                // Refund credit on failure
+                addCredits(1);
+              }
             } else {
               onFinalize();
             }
@@ -232,7 +258,7 @@ const PreviewSection = ({ onFinalize }) => {
           disabled={!validateForm()}
         >
           <SafeIcon icon={FiDownload} />
-          {credits > 0 ? `Use 1 Credit to Download (${credits} left)` : "Finalize & Download"}
+          {credits > 0 ? "Use 1 Credit to Download" : "Finalize & Download"}
         </button>
       </div>
     </div>

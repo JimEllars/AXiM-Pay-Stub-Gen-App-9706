@@ -12,7 +12,7 @@ export const useCredits = () => {
     setCredits(newAmount);
   };
 
-  const useCredit = () => {
+  const consumeCredit = () => {
     if (credits <= 0) return false;
     const newAmount = credits - 1;
     localStorage.setItem('axim_document_credits', String(newAmount));
@@ -20,5 +20,5 @@ export const useCredits = () => {
     return true;
   };
 
-  return { credits, addCredits, useCredit };
+  return { credits, addCredits, consumeCredit };
 };

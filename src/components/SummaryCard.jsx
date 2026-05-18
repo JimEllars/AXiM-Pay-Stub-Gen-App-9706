@@ -3,7 +3,7 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import { FiChevronUp, FiChevronDown } from 'react-icons/fi';
 
 const SummaryCard = () => {
-  const { calculatedTotals, employerDetails, employeeDetails, payPeriod } = usePayStubStore();
+  const { calculatedTotals, employerDetails, employeeDetails, payPeriod, setCurrentStep } = usePayStubStore();
   const { currentGross, taxes, totalDeductions, netPay } = calculatedTotals;
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -35,22 +35,34 @@ const SummaryCard = () => {
               {isMortgageReady ? 'Mortgage/Rental Ready' : 'Document Checklist'}
             </span>
             <div className="flex flex-col gap-1 text-[9px] opacity-80">
-               <div className="flex items-center gap-1">
+               <button
+                 onClick={() => { if (!(employerDetails?.address?.length > 5)) setCurrentStep(1); else if (!(employeeDetails?.address?.length > 5)) setCurrentStep(2); }}
+                 className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
+               >
                  <div className={`w-2 h-2 rounded-full ${(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'bg-green-400' : 'bg-gray-500'}`} />
-                 <span className={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'text-green-400' : 'text-gray-400'}>Address OK</span>
-               </div>
-               <div className="flex items-center gap-1">
+                 <span className={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Address OK</span>
+               </button>
+               <button
+                 onClick={() => { if (!(employerDetails?.ein?.length >= 9)) setCurrentStep(1); else if (!(employeeDetails?.ssnLast4?.length >= 4)) setCurrentStep(2); }}
+                 className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
+               >
                  <div className={`w-2 h-2 rounded-full ${(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'bg-green-400' : 'bg-gray-500'}`} />
-                 <span className={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'text-green-400' : 'text-gray-400'}>Tax ID OK</span>
-               </div>
-               <div className="flex items-center gap-1">
+                 <span className={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Tax ID OK</span>
+               </button>
+               <button
+                 onClick={() => { if (!isPayDateValid) setCurrentStep(2); }}
+                 className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
+               >
                  <div className={`w-2 h-2 rounded-full ${isPayDateValid ? 'bg-green-400' : 'bg-gray-500'}`} />
-                 <span className={isPayDateValid ? 'text-green-400' : 'text-gray-400'}>Pay Date OK</span>
-               </div>
-               <div className="flex items-center gap-1">
+                 <span className={isPayDateValid ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Pay Date OK</span>
+               </button>
+               <button
+                 onClick={() => { if (!(calculatedTotals?.currentGross > 0)) setCurrentStep(3); }}
+                 className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
+               >
                  <div className={`w-2 h-2 rounded-full ${(calculatedTotals?.currentGross > 0) ? 'bg-green-400' : 'bg-gray-500'}`} />
-                 <span className={(calculatedTotals?.currentGross > 0) ? 'text-green-400' : 'text-gray-400'}>Gross Pay OK</span>
-               </div>
+                 <span className={(calculatedTotals?.currentGross > 0) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Gross Pay OK</span>
+               </button>
             </div>
             {isMortgageReady && (
               <span className="text-[9px] text-green-400 mt-1 opacity-90 border-t border-green-500/30 pt-1">Document meets standard requirements for rental or loan applications.</span>
