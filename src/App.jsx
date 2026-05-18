@@ -1,3 +1,7 @@
+
+if (typeof localStorage !== 'undefined' && !localStorage.getItem('axim_user_id')) {
+  localStorage.setItem('axim_user_id', crypto.randomUUID());
+}
 import ErrorBoundary from './components/ErrorBoundary';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';

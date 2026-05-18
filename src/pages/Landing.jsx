@@ -1,3 +1,4 @@
+import { BRANDING } from '../config/branding';
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -19,7 +20,7 @@ const Landing = () => {
           <div className="w-8 h-8 bg-gradient-to-br from-axim-teal to-axim-gold rounded-lg flex items-center justify-center">
             <span className="text-bg-void font-black text-xs">AX</span>
           </div>
-          <span className="font-bold tracking-tighter text-xl uppercase">AXiM <span className="text-gray-500 font-light">Systems</span></span>
+          <span className="font-bold tracking-tighter text-xl uppercase">{BRANDING.productName}</span>
         </div>
         <div className="hidden md:flex gap-8 text-sm font-medium text-gray-400">
           <a href="#" className="hover:text-axim-teal transition-colors">Enterprise</a>
@@ -184,7 +185,7 @@ const Landing = () => {
       <footer className="relative z-10 border-t border-white/10 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-gray-500 text-xs font-mono">
-            &copy; 2024 AXIM SYSTEMS INC. ALL RIGHTS RESERVED.
+            &copy; 2024 {BRANDING.productName.toUpperCase()} INC. ALL RIGHTS RESERVED.
           </div>
           <div className="flex gap-8 text-xs font-bold text-gray-400 uppercase tracking-widest">
             <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>

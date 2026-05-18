@@ -1,3 +1,4 @@
+import { useCredits } from '../utils/useCredits';
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,7 +9,8 @@ import PreviewSection from '../components/FormSections/PreviewSection';
 import SummaryCard from '../components/SummaryCard';
 import { usePayStubStore } from '../store/usePayStubStore';
 import { useEffect } from 'react';
-import { FiLoader, FiAlertTriangle } from 'react-icons/fi';
+import { FiLoader, FiAlertTriangle, FiDownload } from 'react-icons/fi';
+import SafeIcon from '../common/SafeIcon';
 import PaymentModal from '../components/PaymentModal';
 
 const STEPS = [
@@ -19,6 +21,7 @@ const STEPS = [
 ];
 
 const Generator = () => {
+  const { credits } = useCredits();
 
   const storeState = usePayStubStore();
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -88,7 +91,7 @@ const Generator = () => {
   ]);
   const [currentStep, setCurrentStep] = useState(1);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [zoom, setZoom] = useState(typeof window !== 'undefined' && window.innerWidth < 1024 ? 1 : 1);
+  const [zoom, setZoom] = useState(typeof window !== 'undefined' && window.innerWidth < 1024 ? 0.7 : 1);
   const validateForm = usePayStubStore((state) => state.validateForm);
 
   const employerDetails = usePayStubStore((state) => state.employerDetails);
@@ -115,6 +118,15 @@ const Generator = () => {
   return (
     <div className="min-h-screen bg-bg-void text-white font-sans selection:bg-axim-teal selection:text-black">
       
+
+
+      {/* Credits Display */}
+      {credits > 0 && (
+        <div className="fixed top-4 right-4 z-50 bg-axim-teal/10 border border-axim-teal text-axim-teal text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
+          <FiLock className="w-3 h-3" />
+          {credits} Credits
+        </div>
+      )}
 
       {/* Top Progress Bar */}
       <div className="w-full h-1 bg-white/10 fixed top-0 left-0 z-50">
