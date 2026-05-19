@@ -3,8 +3,10 @@ import React from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import SafeIcon from '../../common/SafeIcon';
 import { FiDownload, FiLock } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 
 const PreviewSection = ({ onFinalize }) => {
+  const navigate = useNavigate();
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
   const { credits, consumeCredit, addCredits } = useCredits();
 
@@ -242,8 +244,8 @@ const PreviewSection = ({ onFinalize }) => {
                 window.URL.revokeObjectURL(url);
                 a.remove();
 
-                // Also trigger success redirect?
-                // The prompt says: "Clicking this should directly issue a fetch request to /api/generate-paystub passing an auto-generated token string prefixed with credit_redemption_ instead of initiating a Stripe Checkout sequence."
+                // Force clean application navigation to success with session_id to grant access to duplication dashboard
+                navigate(`/success?session_id=${session_id}`);
               } catch (err) {
                 alert("Failed to generate paystub: " + err.message);
                 // Refund credit on failure

@@ -63,7 +63,8 @@ const Success = () => {
              let diff = 0;
              if (frequency === 'weekly') diff = 7;
              else if (frequency === 'bi-weekly') diff = 14;
-             else if (frequency === 'semi-monthly') {
+
+             if (frequency === 'semi-monthly') {
 
              // Calendar-aware semi-monthly logic
              const [sY, sM, sD] = startDate.split('-').map(Number);
