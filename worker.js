@@ -375,9 +375,9 @@ export default {
       drawText(`Document Ref: ${docId}`, 40, 30, 8, false, rgb(0.5, 0.5, 0.5));
       drawText(`Generated: ${generationTime}`, 40, 20, 8, false, rgb(0.5, 0.5, 0.5));
 
-      pdfDoc.setTitle('Pay Stub - ' + docId);
+      pdfDoc.setTitle(docId);
       pdfDoc.setSubject(sessionId ? `Session: ${sessionId}` : 'Draft');
-      pdfDoc.setKeywords([docId, sessionId, 'pay-stub']);
+      pdfDoc.setKeywords(['pay-stub', docId]);
 
       return { pdfDoc, docId };
     }

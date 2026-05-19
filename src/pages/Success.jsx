@@ -73,7 +73,7 @@ const Success = () => {
                  // 1st-15th -> next is 16th to end of month
                  newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
                  const lastDay = new Date(sY, sM, 0).getDate();
-                 newEndDate = `${eY}-${String(eM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+                 newEndDate = `${sY}-${String(sM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
              } else {
                  // 16th-end -> next is 1st to 15th of next month
                  const nextMonth = sM === 12 ? 1 : sM + 1;
