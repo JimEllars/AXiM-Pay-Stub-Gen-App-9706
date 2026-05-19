@@ -1,14 +1,15 @@
 import { useCredits } from '../../utils/useCredits';
-import React from 'react';
+import React, { useState } from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import SafeIcon from '../../common/SafeIcon';
-import { FiDownload, FiLock } from 'react-icons/fi';
+import { FiDownload, FiLock, FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 const PreviewSection = ({ onFinalize }) => {
   const navigate = useNavigate();
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
   const { credits, consumeCredit, addCredits } = useCredits();
+  const [isGenerating, setIsGenerating] = useState(false);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -222,6 +223,7 @@ const PreviewSection = ({ onFinalize }) => {
         <button 
           onClick={async () => {
             if (credits > 0) {
+              setIsGenerating(true);
               consumeCredit();
               fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'bundle_redemption_frequency' }) }).catch(() => {});
 
@@ -250,6 +252,8 @@ const PreviewSection = ({ onFinalize }) => {
                 alert("Failed to generate paystub: " + err.message);
                 // Refund credit on failure
                 addCredits(1);
+              } finally {
+                setIsGenerating(false);
               }
             } else {
               onFinalize();
@@ -257,10 +261,14 @@ const PreviewSection = ({ onFinalize }) => {
           }}
 
           className="group w-full sm:w-auto bg-axim-teal text-bg-void font-black px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-axim-teal"
-          disabled={!validateForm()}
+          disabled={!validateForm() || isGenerating}
         >
-          <SafeIcon icon={FiDownload} />
-          {credits > 0 ? "Use 1 Credit to Download" : "Finalize & Download"}
+          {isGenerating ? (
+            <SafeIcon icon={FiLoader} className="animate-spin" />
+          ) : (
+            <SafeIcon icon={FiDownload} />
+          )}
+          {isGenerating ? "Processing..." : (credits > 0 ? "Use 1 Credit to Download" : "Finalize & Download")}
         </button>
       </div>
     </div>

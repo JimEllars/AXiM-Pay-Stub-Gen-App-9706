@@ -9,7 +9,7 @@ import PreviewSection from '../components/FormSections/PreviewSection';
 import SummaryCard from '../components/SummaryCard';
 import { usePayStubStore } from '../store/usePayStubStore';
 import { useEffect } from 'react';
-import { FiLoader, FiAlertTriangle, FiDownload } from 'react-icons/fi';
+import { FiLoader, FiAlertTriangle, FiDownload, FiLock } from 'react-icons/fi';
 import SafeIcon from '../common/SafeIcon';
 import PaymentModal from '../components/PaymentModal';
 
