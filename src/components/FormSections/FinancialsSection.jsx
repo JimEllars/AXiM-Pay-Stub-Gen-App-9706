@@ -7,11 +7,20 @@ const FinancialsSection = () => {
   const { 
     earnings, addEarning, updateEarning, removeEarning, 
     customDeductions, addCustomDeduction, updateCustomDeduction, removeCustomDeduction,
-    calculatedTotals, taxOverrides, updateTaxOverride, resetTaxOverride, updateYtdGross, autoCalculate, toggleAutoCalculate
+    calculatedTotals, taxOverrides, updateTaxOverride, resetTaxOverride, updateYtdGross, autoCalculate, toggleAutoCalculate, resetFinancialDefaults
   } = usePayStubStore();
 
   return (
     <div className="space-y-8 pb-10">
+      <div className="flex justify-end">
+        <button
+          onClick={resetFinancialDefaults}
+          className="text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-lg transition-colors border border-white/10"
+        >
+          <SafeIcon icon={FiRefreshCw} size={12} />
+          Reset Financial Defaults
+        </button>
+      </div>
       {/* Earnings Section */}
       <div className="bg-glass border border-white/10 p-6 rounded-xl backdrop-blur-md">
         <div className="flex justify-between items-center mb-6">

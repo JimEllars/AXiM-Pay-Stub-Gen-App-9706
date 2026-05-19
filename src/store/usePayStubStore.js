@@ -82,6 +82,7 @@ const TAX_RATES = {
 };
 
 const initialFormState = {
+  currentStep: 1,
   ytdGrossOverridden: false,
   employerDetails: { name: '', address: '', ein: '', zipCode: '' },
   employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
@@ -116,6 +117,10 @@ export const usePayStubStore = create(persist((set, get) => ({
   ...initialFormState,
 
   // PHASE 3: Re-hydration for Post-Checkout Workflow
+
+  setCurrentStep: (step) => set((state) => ({
+    currentStep: typeof step === 'function' ? step(state.currentStep) : step
+  })),
 
   validateForm: () => {
     const state = get();
@@ -277,6 +282,15 @@ addEarning: () => set((state) => ({
 
   resetTaxOverride: (taxType) => {
     set((state) => ({ taxOverrides: { ...state.taxOverrides, [taxType]: false } }));
+    get().recalculateAll();
+  },
+
+  resetFinancialDefaults: () => {
+    set({
+      customDeductions: [],
+      autoCalculate: true,
+      taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
+    });
     get().recalculateAll();
   },
 
