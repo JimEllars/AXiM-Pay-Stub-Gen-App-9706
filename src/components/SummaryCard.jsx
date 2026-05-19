@@ -20,7 +20,7 @@ const SummaryCard = () => {
     calculatedTotals?.currentGross > 0;
 
   const isProgressiveState = employeeDetails?.state && ['CA', 'NY'].includes(employeeDetails.state.toUpperCase());
-
+  const { hasDeductionOverflow } = usePayStubStore();
 
   return (
     <>
@@ -76,6 +76,13 @@ const SummaryCard = () => {
           <div className="mb-6 p-3 rounded-lg border bg-yellow-500/10 border-yellow-500/30 text-yellow-400 text-xs flex items-start gap-2">
             <span className="font-bold flex-shrink-0">Tax Accuracy Warning:</span>
             <span>You selected {employeeDetails.state}, which has a progressive tax structure. Tax estimates shown here may vary from exact CPA values. Please verify values manually if needed.</span>
+          </div>
+        )}
+
+        {hasDeductionOverflow && (
+          <div className="mb-6 p-3 rounded-lg border bg-yellow-500/10 border-yellow-500/30 text-yellow-400 text-xs flex items-start gap-2">
+            <span className="font-bold flex-shrink-0">Warning:</span>
+            <span>Total deductions exceed gross period compensation. Net pay has been clamped to $0.00. Please review adjustments.</span>
           </div>
         )}
 
