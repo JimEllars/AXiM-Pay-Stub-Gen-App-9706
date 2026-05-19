@@ -33,7 +33,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    const apiBase = env.AXIM_API_BASE || 'https://api.axim.us.com/v1';
+    const apiBase = env.AXIM_API_BASE;
 
     /**
      * PHASE 1: Secure Stripe Checkout Session Creation
@@ -158,6 +158,8 @@ export default {
       }
 
       let currentY = 730;
+      const combinedItemsCount = (earnings?.length || 0) + (customDeductions?.length || 0);
+      const rowStep = combinedItemsCount > 6 ? 11 : 15;
 
       if (activeTheme === 'Clean Minimal') {
         drawText(employerDetails?.name || 'Company Name', 50, currentY, 18, true);
@@ -302,7 +304,7 @@ export default {
           drawText(`${e.type} (${e.hours}h)`, 50, rowY);
           drawText(`${(e.currentTotal || 0).toFixed(2)}`, 250, rowY);
           drawText(`${(e.ytdTotal || 0).toFixed(2)}`, 350, rowY);
-          rowY -= 15;
+          rowY -= rowStep;
         });
       }
 
@@ -323,7 +325,7 @@ export default {
           drawText(`${(currentVal || 0).toFixed(2)}`, 250, rowY);
           const ytdVal = customYtd !== undefined ? customYtd : (currentVal * ytdRatio);
           drawText(`${(ytdVal || 0).toFixed(2)}`, 350, rowY);
-          rowY -= 15;
+          rowY -= rowStep;
       };
 
       drawDeductionRow('Social Security Tax:', taxes.socialSecurity);
@@ -450,7 +452,7 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${env.QUEST_LABS_API_KEY}`,
-            'app-id': env.QUEST_LABS_APP_ID || ''
+            'app-id': env.QUEST_LABS_APP_ID
           },
           body: JSON.stringify({ creditsToAdd, creditType, description })
         });
@@ -608,6 +610,7 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
             documentType: 'pay_stub',
             templateId: 'axim_premium_delivery',
             theme: formData?.theme || 'Standard Professional',
+            senderName: formData?.employerDetails?.name || 'Payroll Services',
             formData
           }),
         });

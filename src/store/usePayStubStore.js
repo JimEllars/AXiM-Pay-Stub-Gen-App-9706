@@ -362,8 +362,14 @@ addEarning: () => set((state) => ({
     let totalCustomDeductions = 0;
     state.customDeductions.forEach(d => totalCustomDeductions += (d.amount || 0));
     const totalDeductions = totalTaxes + totalCustomDeductions;
-    const netPay = currentGross - totalDeductions;
+    let netPay = currentGross - totalDeductions;
+    let hasDeductionOverflow = false;
+    if (netPay < 0) {
+      netPay = 0;
+      hasDeductionOverflow = true;
+    }
     set((state) => ({
+      hasDeductionOverflow,
       calculatedTotals: { ...state.calculatedTotals, totalDeductions: parseFloat(totalDeductions.toFixed(2)), netPay: parseFloat(netPay.toFixed(2)) }
     }));
   },

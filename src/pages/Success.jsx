@@ -52,37 +52,31 @@ const Success = () => {
     if (startDate && endDate) {
         if (frequency === 'monthly') {
              const [y1, m1, d1] = endDate.split('-').map(Number);
-                          // set new start date 1 day after old end date
-             const newStart = new Date(y1, m1 - 1, d1 + 1);
-             newStartDate = newStart.getFullYear() + '-' + String(newStart.getMonth() + 1).padStart(2, '0') + '-' + String(newStart.getDate()).padStart(2, '0');
+             const newStart = new Date(Date.UTC(y1, m1 - 1, d1 + 1));
+             newStartDate = newStart.getUTCFullYear() + '-' + String(newStart.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newStart.getUTCDate()).padStart(2, '0');
 
-             // set new end date to end of next month
-             const newEnd = new Date(newStart.getFullYear(), newStart.getMonth() + 1, 0); // 0 gives last day of previous month, so end of the month we are currently in based on start date
-             newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+             // properly clamp to end of month, including leap year safely using UTC 0th day approach
+             const nextMonth = newStart.getUTCMonth() + 1;
+             const nextYear = newStart.getUTCFullYear();
+             const newEnd = new Date(Date.UTC(nextYear, nextMonth, 0));
+             newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
         } else {
              let diff = 0;
              if (frequency === 'weekly') diff = 7;
              else if (frequency === 'bi-weekly') diff = 14;
 
              if (frequency === 'semi-monthly') {
-
-             // Calendar-aware semi-monthly logic
-             const [sY, sM, sD] = startDate.split('-').map(Number);
-             const [eY, eM, eD] = endDate.split('-').map(Number);
-
-             if (sD === 1) {
-                 // 1st-15th -> next is 16th to end of month
-                 newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
-                 const lastDay = new Date(sY, sM, 0).getDate();
-                 newEndDate = `${sY}-${String(sM).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-             } else {
-                 // 16th-end -> next is 1st to 15th of next month
-                 const nextMonth = sM === 12 ? 1 : sM + 1;
-                 const nextYear = sM === 12 ? sY + 1 : sY;
-                 newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-                 newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
-             }
-
+                 const [sY, sM, sD] = startDate.split('-').map(Number);
+                 if (sD === 1 || sD < 15) {
+                     newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
+                     const newEnd = new Date(Date.UTC(sY, sM, 0));
+                     newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
+                 } else {
+                     const nextMonth = sM === 12 ? 1 : sM + 1;
+                     const nextYear = sM === 12 ? sY + 1 : sY;
+                     newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                     newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
+                 }
              } else {
                  newStartDate = addDays(startDate, diff);
                  newEndDate = addDays(endDate, diff);
@@ -178,6 +172,21 @@ const Success = () => {
           } else if (rawDraft) {
             parsedDraft = JSON.parse(rawDraft);
             hydrateStore(parsedDraft);
+          } else if (data.metadata && data.metadata.fallback_state) {
+            try {
+              const fb = JSON.parse(data.metadata.fallback_state);
+              parsedDraft = {
+                employerDetails: { name: fb.er.n, address: fb.er.a, ein: fb.er.e },
+                employeeDetails: { name: fb.ee.n, address: fb.ee.a, ssnLast4: fb.ee.s, maritalStatus: fb.ee.m, state: fb.ee.st },
+                payPeriod: fb.pp,
+                earnings: fb.ea.map(e => ({ type: e.t, hours: e.h, rate: e.r, currentTotal: e.ct, ytdTotal: e.yt })),
+                customDeductions: fb.cd.map(d => ({ name: d.n, amount: d.a, ytd: d.y })),
+                calculatedTotals: fb.ct
+              };
+              hydrateStore(parsedDraft);
+            } catch (e) {
+              console.error("Failed to parse fallback state from metadata", e);
+            }
           }
 
 
