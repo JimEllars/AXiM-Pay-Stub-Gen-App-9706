@@ -60,26 +60,24 @@ const Success = () => {
              const nextYear = newStart.getUTCFullYear();
              const newEnd = new Date(Date.UTC(nextYear, nextMonth, 0));
              newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
-        } else {
-             let diff = 0;
-             if (frequency === 'weekly') diff = 7;
-             else if (frequency === 'bi-weekly') diff = 14;
-
-             if (frequency === 'semi-monthly') {
-                 const [sY, sM, sD] = startDate.split('-').map(Number);
-                 if (sD === 1 || sD < 15) {
-                     newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
-                     const newEnd = new Date(Date.UTC(sY, sM, 0));
-                     newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
-                 } else {
-                     const nextMonth = sM === 12 ? 1 : sM + 1;
-                     const nextYear = sM === 12 ? sY + 1 : sY;
-                     newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
-                     newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
-                 }
+        } else if (frequency === 'weekly') {
+             newStartDate = addDays(startDate, 7);
+             newEndDate = addDays(endDate, 7);
+        } else if (frequency === 'bi-weekly') {
+             newStartDate = addDays(startDate, 14);
+             newEndDate = addDays(endDate, 14);
+        } else if (frequency === 'semi-monthly') {
+             const [sY, sM, sD] = startDate.split('-').map(Number);
+             if (sD === 1 || sD < 15) {
+                 newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
+                 const newEnd = new Date(Date.UTC(sY, sM, 0));
+                 newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
              } else {
-                 newStartDate = addDays(startDate, diff);
-                 newEndDate = addDays(endDate, diff);
+                 const nextMonth = sM === 12 ? 1 : sM + 1;
+                 const nextYear = sM === 12 ? sY + 1 : sY;
+                 newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                 // Find 15th of next month
+                 newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
              }
         }
     }
@@ -87,22 +85,16 @@ const Success = () => {
     if (payDate) {
         if (frequency === 'monthly') {
              const [y1, m1, d1] = payDate.split('-').map(Number);
-             // increment month
-             const nextPay = new Date(y1, m1, d1);
-             newPayDate = nextPay.getFullYear() + '-' + String(nextPay.getMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getDate()).padStart(2, '0');
-        } else {
-            let diff = 0;
-            if (frequency === 'weekly') diff = 7;
-            else if (frequency === 'bi-weekly') diff = 14;
-            else if (frequency === 'semi-monthly') {
-             // simplified logic for pay date (add 15 days, wait instructions didn't specify paydate snap)
+             const nextPay = new Date(Date.UTC(y1, m1, d1)); // safely increment month
+             newPayDate = nextPay.getUTCFullYear() + '-' + String(nextPay.getUTCMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getUTCDate()).padStart(2, '0');
+        } else if (frequency === 'weekly') {
+             newPayDate = addDays(payDate, 7);
+        } else if (frequency === 'bi-weekly') {
+             newPayDate = addDays(payDate, 14);
+        } else if (frequency === 'semi-monthly') {
              newPayDate = addDays(payDate, 15);
-            } else {
-              newPayDate = addDays(payDate, diff);
-            }
         }
     }
-
 
     const newDraft = {
         ...currentState,
