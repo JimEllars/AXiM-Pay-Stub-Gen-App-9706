@@ -61,7 +61,7 @@ export default {
                 price_data: {
                   currency: 'usd',
                   product_data: {
-                    name: body.productId === "pay_stub_bundle" ? "Pay Stub Bundle" : "Pay Stub Generation",
+                    name: body.productId === "pay_stub_bundle" ? "Premium Pay Stub Bundle" : "Premium Pay Stub Generation",
                   },
                   unit_amount: body.productId === "pay_stub_bundle" ? 2000 : 400,
                 },
@@ -377,7 +377,7 @@ export default {
 
       pdfDoc.setTitle(docId);
       pdfDoc.setSubject(sessionId ? `Session: ${sessionId}` : 'Draft');
-      pdfDoc.setKeywords(['pay-stub', docId]);
+      pdfDoc.setKeywords([]);
 
       return { pdfDoc, docId };
     }
@@ -651,6 +651,13 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
       }
     }
 
+
+    if (url.pathname === '/api/save-draft-queue' && request.method === 'POST') {
+      return new Response(JSON.stringify({ status: 'ok' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
 
     return new Response('Proxy: Endpoint Not Found', { status: 404, headers: corsHeaders });
 
