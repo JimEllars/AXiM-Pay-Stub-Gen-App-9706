@@ -84,10 +84,9 @@ const PaymentModal = ({ isOpen, onClose }) => {
               er: { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein },
               ee: { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state },
               pp: storeState.payPeriod,
-              ea: (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate, ct: e.currentTotal, yt: e.ytdTotal })),
-              cd: (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount, y: d.ytd })),
-              ct: storeState.calculatedTotals
-            }).substring(0, 500)
+              ea: (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })),
+              cd: (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }))
+            })
           }
         })
       });

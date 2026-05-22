@@ -33,7 +33,7 @@ export default {
     }
 
     const url = new URL(request.url);
-    const apiBase = env.AXIM_API_BASE;
+    const apiBase = env.AXIM_API_BASE || 'https://api.axim.us.com/v1';
 
     /**
      * PHASE 1: Secure Stripe Checkout Session Creation

@@ -1,3 +1,4 @@
+import { trackEvent } from '../../utils/telemetry';
 import { useCredits } from '../../utils/useCredits';
 import React, { useState } from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
@@ -225,7 +226,7 @@ const PreviewSection = ({ onFinalize }) => {
             if (credits > 0) {
               setIsGenerating(true);
               consumeCredit();
-              fetch('/api/v1/telemetry/ingest', { method: 'POST', body: JSON.stringify({ event: 'bundle_redemption_frequency' }) }).catch(() => {});
+              trackEvent('bundle_redemption_frequency');
 
               try {
                 const formData = usePayStubStore.getState();
