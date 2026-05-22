@@ -171,11 +171,11 @@ const Success = () => {
                 employerDetails: { name: fb.er.n, address: fb.er.a, ein: fb.er.e },
                 employeeDetails: { name: fb.ee.n, address: fb.ee.a, ssnLast4: fb.ee.s, maritalStatus: fb.ee.m, state: fb.ee.st },
                 payPeriod: fb.pp,
-                earnings: fb.ea.map(e => ({ type: e.t, hours: e.h, rate: e.r, currentTotal: e.ct, ytdTotal: e.yt })),
-                customDeductions: fb.cd.map(d => ({ name: d.n, amount: d.a, ytd: d.y })),
-                calculatedTotals: fb.ct
+                earnings: fb.ea.map(e => ({ type: e.t, hours: e.h, rate: e.r })),
+                customDeductions: fb.cd.map(d => ({ name: d.n, amount: d.a }))
               };
               hydrateStore(parsedDraft);
+              recalculateAll();
             } catch (e) {
               console.error("Failed to parse fallback state from metadata", e);
             }
@@ -246,7 +246,7 @@ const Success = () => {
 
 
   useEffect(() => {
-    if (status === 'success' && !downloading && !autoDownloaded) {
+    if (status === 'success' && !downloading && !autoDownloaded && !searchParams.get('session_id')?.startsWith('credit_redemption_')) {
       setAutoDownloaded(true);
       if (searchParams.get('session_id') && !searchParams.get('session_id').startsWith('credit_redemption_')) {
          // Deduct 1 credit for the auto-download if this was a new bundle purchase.
@@ -292,7 +292,7 @@ const Success = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      trackEvent('time_to_first_download');
+      trackEvent('time_to_first_download', { session_id: searchParams.get('session_id') });
 
       // Telemetry Sync
 
