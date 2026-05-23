@@ -230,7 +230,15 @@ const PreviewSection = ({ onFinalize }) => {
 
               try {
                 const formData = usePayStubStore.getState();
-                const session_id = 'credit_redemption_' + Date.now();
+
+                // Get secure token
+                const tokenRes = await fetch('/api/generate-credit-token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' }
+                });
+                if (!tokenRes.ok) throw new Error("Failed to authenticate credit redemption");
+                const { session_id } = await tokenRes.json();
+
                 const res = await fetch('/api/generate-paystub', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },

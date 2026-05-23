@@ -92,8 +92,15 @@ const PaymentModal = ({ isOpen, onClose }) => {
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to initialize checkout gateway. Status: ${response.status}`);
+        const errorText = await response.text();
+        let errMsg = `Failed to initialize checkout gateway. Status: ${response.status}`;
+        try {
+          const errorData = JSON.parse(errorText);
+          if (errorData.error) errMsg = errorData.error;
+        } catch(e) {
+          if (errorText) errMsg = errorText;
+        }
+        throw new Error(errMsg);
       }
 
       const data = await response.json();
