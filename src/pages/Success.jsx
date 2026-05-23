@@ -52,13 +52,14 @@ const Success = () => {
     if (startDate && endDate) {
         if (frequency === 'monthly') {
              const [y1, m1, d1] = endDate.split('-').map(Number);
-             const newStart = new Date(Date.UTC(y1, m1 - 1, d1 + 1));
-             newStartDate = newStart.getUTCFullYear() + '-' + String(newStart.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newStart.getUTCDate()).padStart(2, '0');
+             const nextMonthStart = m1 === 12 ? 1 : m1 + 1;
+             const nextYearStart = m1 === 12 ? y1 + 1 : y1;
+
+             // First day of next month
+             newStartDate = nextYearStart + '-' + String(nextMonthStart).padStart(2, '0') + '-01';
 
              // properly clamp to end of month, including leap year safely using UTC 0th day approach
-             const nextMonth = newStart.getUTCMonth() + 1;
-             const nextYear = newStart.getUTCFullYear();
-             const newEnd = new Date(Date.UTC(nextYear, nextMonth, 0));
+             const newEnd = new Date(Date.UTC(nextYearStart, nextMonthStart, 0));
              newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
         } else if (frequency === 'weekly') {
              newStartDate = addDays(startDate, 7);
@@ -85,7 +86,9 @@ const Success = () => {
     if (payDate) {
         if (frequency === 'monthly') {
              const [y1, m1, d1] = payDate.split('-').map(Number);
-             const nextPay = new Date(Date.UTC(y1, m1, d1)); // safely increment month
+             const nextMonth = m1 === 12 ? 1 : m1 + 1;
+             const nextYear = m1 === 12 ? y1 + 1 : y1;
+             const nextPay = new Date(Date.UTC(nextYear, nextMonth - 1, d1));
              newPayDate = nextPay.getUTCFullYear() + '-' + String(nextPay.getUTCMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getUTCDate()).padStart(2, '0');
         } else if (frequency === 'weekly') {
              newPayDate = addDays(payDate, 7);
@@ -143,7 +146,15 @@ const Success = () => {
         });
 
         if (!response.ok) {
-           throw new Error(`Verification API returned status ${response.status}`);
+           const errorText = await response.text();
+           let errMsg = `Verification API returned status ${response.status}`;
+           try {
+             const edata = JSON.parse(errorText);
+             if (edata.error) errMsg = edata.error;
+           } catch (e) {
+             if (errorText) errMsg = errorText;
+           }
+           throw new Error(errMsg);
         }
 
         const data = await response.json();
@@ -186,7 +197,7 @@ const Success = () => {
             try {
               // Add 6 Document Credits to user profile via Quest Labs API
               const userId = localStorage.getItem('axim_user_id') || searchParams.get('session_id');
-              fetch('/api/grant-credits', {
+              await fetch('/api/grant-credits', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -196,9 +207,9 @@ const Success = () => {
                   description: 'Streamlined bundle redemption bonus',
                   session_id: sessionId
                 })
-              }).catch(console.error);
+              });
 
-              // Also store locally for immediate sync
+              // Also store locally for immediate sync after API confirms success
               addCredits(6);
             } catch (e) {
               console.error('Failed to add credits via Quest', e);
@@ -246,15 +257,18 @@ const Success = () => {
 
 
   useEffect(() => {
-    if (status === 'success' && !downloading && !autoDownloaded && !searchParams.get('session_id')?.startsWith('credit_redemption_')) {
+    const isCreditRedemption = searchParams.get('session_id')?.startsWith('credit_redemption_');
+    const hasAlreadyDownloaded = sessionStorage.getItem('auto_downloaded_' + searchParams.get('session_id'));
+
+    if (status === 'success' && !downloading && !autoDownloaded && !isCreditRedemption && !hasAlreadyDownloaded) {
       setAutoDownloaded(true);
-      if (searchParams.get('session_id') && !searchParams.get('session_id').startsWith('credit_redemption_')) {
-         // Deduct 1 credit for the auto-download if this was a new bundle purchase.
-         consumeCredit();
-      }
+      sessionStorage.setItem('auto_downloaded_' + searchParams.get('session_id'), 'true');
+
+      // Deduct 1 credit for the auto-download if this was a new bundle purchase.
+      consumeCredit();
       handleDownload();
     }
-  }, [status]);
+  }, [status, downloading, autoDownloaded, searchParams, consumeCredit]);
 
 
   const handleDownload = async () => {

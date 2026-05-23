@@ -1,3 +1,30 @@
+
+async function verifySecureToken(session_id, secret) {
+  if (!session_id.startsWith('credit_redemption_')) return false;
+
+  const parts = session_id.split('_');
+  if (parts.length < 4) return false;
+
+  const rawToken = `credit_redemption_${parts[2]}`;
+  const providedSignature = parts[3];
+
+  const encoder = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+
+  // Reconstruct signature
+  const signatureBuffer = await crypto.subtle.sign("HMAC", keyMaterial, encoder.encode(rawToken));
+  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+  const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+  return providedSignature === expectedSignature;
+}
+
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
 /**
  * Generic Edge Proxy - Production v1.0
@@ -102,7 +129,8 @@ export default {
            throw new Error("Missing session_id");
         }
 
-        if (session_id.startsWith('credit_redemption_')) {
+        const isSecureCredit = await verifySecureToken(session_id, env.AXIM_SERVICE_KEY);
+        if (isSecureCredit) {
            return new Response(JSON.stringify({ isPaid: true, method: 'credit' }), {
              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
            });
@@ -437,13 +465,49 @@ export default {
     }
 
 
+
+    if (url.pathname === '/api/generate-credit-token' && request.method === 'POST') {
+      try {
+        // Here we could verify QUEST_LABS_API_KEY from the frontend, but we don't expose it to frontend.
+        // Instead, the frontend calls this when redeeming a credit. We should probably sign a token
+        // to prove this worker generated the credit_redemption token.
+
+        // Very basic JWT-like signature to ensure worker generated this session_id.
+        // In a real app we'd use WebCrypto. Here we'll do a simple hash or just return a cryptographically random UUID.
+        // Actually, since the worker is stateless and has AXIM_SERVICE_KEY, we can generate a simple HMAC-like token.
+
+        const timestamp = Date.now();
+        const rawToken = `credit_redemption_${timestamp}`;
+
+        const encoder = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+          "raw",
+          encoder.encode(env.AXIM_SERVICE_KEY),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"]
+        );
+
+        const signatureBuffer = await crypto.subtle.sign("HMAC", keyMaterial, encoder.encode(rawToken));
+        const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+        const signatureHex = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+        const secureToken = `${rawToken}_${signatureHex}`;
+
+        return new Response(JSON.stringify({ session_id: secureToken }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: "Failed to generate token" }), { status: 500, headers: corsHeaders });
+      }
+    }
+
     if (url.pathname === '/api/grant-credits' && request.method === 'POST') {
       try {
         const body = await request.json();
         const { userId, creditsToAdd, creditType, description, session_id } = body;
 
         // Basic session validation
-        if (!session_id || (!session_id.startsWith('cs_') && !session_id.startsWith('credit_redemption_'))) {
+        const isSecureCredit = await verifySecureToken(session_id, env.AXIM_SERVICE_KEY);
+        if (!session_id || (!session_id.startsWith('cs_') && !isSecureCredit)) {
            return new Response(JSON.stringify({ error: 'Invalid session' }), { status: 403, headers: corsHeaders });
         }
 
@@ -473,7 +537,8 @@ export default {
            throw new Error("Missing session_id or formData");
         }
 
-        if (!session_id.startsWith('credit_redemption_')) {
+        const isSecureCredit = await verifySecureToken(session_id, env.AXIM_SERVICE_KEY);
+        if (!isSecureCredit) {
           const verifyResponse = await fetch(`${apiBase}/functions/verify-session`, {
             method: 'POST',
             headers: {
@@ -543,7 +608,7 @@ export default {
               event: 'revenue_generated',
               type: 'pay_stub',
               session_id,
-              amount: session_id.startsWith('credit_redemption_') ? 0.00 : (Array.isArray(formData) ? 20.00 : 4.00),
+              amount: (await verifySecureToken(session_id, env.AXIM_SERVICE_KEY)) ? 0.00 : (Array.isArray(formData) ? 20.00 : 4.00),
               trace_id: docId
             })
           }).catch(e => console.error("Telemetry logging failed:", e))
@@ -574,7 +639,8 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
         }
 
         // Verify session_id belongs to a paid transaction
-        if (!session_id.startsWith('credit_redemption_')) {
+        const isSecureCredit = await verifySecureToken(session_id, env.AXIM_SERVICE_KEY);
+        if (!isSecureCredit) {
           const verifyResponse = await fetch(`${apiBase}/functions/verify-session`, {
             method: 'POST',
             headers: {
