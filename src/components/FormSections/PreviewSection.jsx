@@ -1,5 +1,3 @@
-import { trackEvent } from '../../utils/telemetry';
-import { useCredits } from '../../utils/useCredits';
 import React, { useState } from 'react';
 import { usePayStubStore } from '../../store/usePayStubStore';
 import SafeIcon from '../../common/SafeIcon';
@@ -9,8 +7,6 @@ import { useNavigate } from 'react-router-dom';
 const PreviewSection = ({ onFinalize }) => {
   const navigate = useNavigate();
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
-  const { credits, consumeCredit, addCredits } = useCredits();
-  const [isGenerating, setIsGenerating] = useState(false);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -222,62 +218,12 @@ const PreviewSection = ({ onFinalize }) => {
           Preview Draft
         </button>
         <button 
-          onClick={async () => {
-            if (credits > 0) {
-              setIsGenerating(true);
-              consumeCredit();
-              trackEvent('bundle_redemption_frequency');
-
-              try {
-                const formData = usePayStubStore.getState();
-
-                // Get secure token
-                const tokenRes = await fetch('/api/generate-credit-token', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' }
-                });
-                if (!tokenRes.ok) throw new Error("Failed to authenticate credit redemption");
-                const { session_id } = await tokenRes.json();
-
-                const res = await fetch('/api/generate-paystub', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ formData, session_id })
-                });
-                if (!res.ok) throw new Error("Paystub generation failed");
-                const blob = await res.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'PayStub.pdf';
-                document.body.appendChild(a);
-                a.click();
-                window.URL.revokeObjectURL(url);
-                a.remove();
-
-                // Force clean application navigation to success with session_id to grant access to duplication dashboard
-                navigate(`/success?session_id=${session_id}`);
-              } catch (err) {
-                alert("Failed to generate paystub: " + err.message);
-                // Refund credit on failure
-                addCredits(1);
-              } finally {
-                setIsGenerating(false);
-              }
-            } else {
-              onFinalize();
-            }
-          }}
-
+          onClick={() => onFinalize()}
           className="group w-full sm:w-auto bg-axim-teal text-bg-void font-black px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-axim-teal"
-          disabled={!validateForm() || isGenerating}
+          disabled={!validateForm()}
         >
-          {isGenerating ? (
-            <SafeIcon icon={FiLoader} className="animate-spin" />
-          ) : (
-            <SafeIcon icon={FiDownload} />
-          )}
-          {isGenerating ? "Processing..." : (credits > 0 ? "Use 1 Credit to Download" : "Finalize & Download")}
+          <SafeIcon icon={FiDownload} />
+          Finalize & Download
         </button>
       </div>
     </div>
