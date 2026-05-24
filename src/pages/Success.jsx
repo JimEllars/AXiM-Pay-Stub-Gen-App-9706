@@ -21,6 +21,7 @@ const Success = () => {
   const [emailInput, setEmailInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
+  const resetFinancialDefaults = usePayStubStore(state => state.resetFinancialDefaults);
   const storeState = usePayStubStore();
 
   const navigate = useNavigate();
@@ -175,20 +176,25 @@ const Success = () => {
           } else if (rawDraft) {
             parsedDraft = JSON.parse(rawDraft);
             hydrateStore(parsedDraft);
-          } else if (data.metadata && data.metadata.fallback_state) {
+          } else if (data.metadata && (data.metadata.state_part_er || data.metadata.state_part_ee)) {
             try {
-              const fb = JSON.parse(data.metadata.fallback_state);
+              const fbEr = data.metadata.state_part_er ? JSON.parse(data.metadata.state_part_er) : {};
+              const fbEe = data.metadata.state_part_ee ? JSON.parse(data.metadata.state_part_ee) : {};
+              const fbPp = data.metadata.state_part_pp ? JSON.parse(data.metadata.state_part_pp) : {};
+              const fbEa = data.metadata.state_part_ea ? JSON.parse(data.metadata.state_part_ea) : [];
+              const fbCd = data.metadata.state_part_cd ? JSON.parse(data.metadata.state_part_cd) : [];
+
               parsedDraft = {
-                employerDetails: { name: fb.er.n, address: fb.er.a, ein: fb.er.e },
-                employeeDetails: { name: fb.ee.n, address: fb.ee.a, ssnLast4: fb.ee.s, maritalStatus: fb.ee.m, state: fb.ee.st },
-                payPeriod: fb.pp,
-                earnings: fb.ea.map(e => ({ type: e.t, hours: e.h, rate: e.r })),
-                customDeductions: fb.cd.map(d => ({ name: d.n, amount: d.a }))
+                employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
+                employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
+                payPeriod: fbPp,
+                earnings: fbEa.map(e => ({ type: e.t, hours: e.h, rate: e.r })),
+                customDeductions: fbCd.map(d => ({ name: d.n, amount: d.a }))
               };
               hydrateStore(parsedDraft);
               recalculateAll();
             } catch (e) {
-              console.error("Failed to parse fallback state from metadata", e);
+              console.error("Failed to parse segmented fallback state from metadata", e);
             }
           }
 
@@ -319,6 +325,17 @@ const Success = () => {
       alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
     } finally {
       setDownloading(false);
+      resetFinancialDefaults();
+      // Keep employerDetails for subsequent uses, reset employee and temporary buffers
+      const resetState = usePayStubStore.getState();
+      hydrateStore({
+          ...resetState,
+          employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
+          payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' }
+      });
+      sessionStorage.removeItem('axim_paystub_draft');
+      sessionStorage.removeItem('axim_paystub_draft_queue');
+      sessionStorage.removeItem('paystub_delivery_email');
     }
   };
 

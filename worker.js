@@ -8,21 +8,26 @@ async function verifySecureToken(session_id, secret) {
   const rawToken = `credit_redemption_${parts[2]}`;
   const providedSignature = parts[3];
 
-  const encoder = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
+  try {
+    const encoder = new TextEncoder();
+    const keyMaterial = await crypto.subtle.importKey(
+      "raw",
+      encoder.encode(secret),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
 
-  // Reconstruct signature
-  const signatureBuffer = await crypto.subtle.sign("HMAC", keyMaterial, encoder.encode(rawToken));
-  const signatureArray = Array.from(new Uint8Array(signatureBuffer));
-  const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    // Reconstruct signature
+    const signatureBuffer = await crypto.subtle.sign("HMAC", keyMaterial, encoder.encode(rawToken));
+    const signatureArray = Array.from(new Uint8Array(signatureBuffer));
+    const expectedSignature = signatureArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-  return providedSignature === expectedSignature;
+    return providedSignature === expectedSignature;
+  } catch (e) {
+    console.error('Error verifying secure token:', e);
+    return false;
+  }
 }
 
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';

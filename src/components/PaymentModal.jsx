@@ -80,13 +80,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
           metadata: {
             deliveryEmail: email,
             documentType: planType === "bundle" ? "pay_stub_bundle_v1" : "pay_stub_v1",
-            fallback_state: JSON.stringify({
-              er: { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein },
-              ee: { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state },
-              pp: storeState.payPeriod,
-              ea: (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })),
-              cd: (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }))
-            })
+            state_part_er: JSON.stringify({ n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein }),
+            state_part_ee: JSON.stringify({ n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state }),
+            state_part_pp: JSON.stringify(storeState.payPeriod),
+            state_part_ea: JSON.stringify((storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }))),
+            state_part_cd: JSON.stringify((storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount })))
           }
         })
       });
