@@ -1,5 +1,4 @@
 import { trackEvent } from '../utils/telemetry';
-import { useCredits } from '../utils/useCredits';
 import { BRANDING } from '../config/branding';
 import { syncDraftQueueToProfile } from '../store/usePayStubStore';
 
@@ -12,7 +11,6 @@ import { usePayStubStore } from '../store/usePayStubStore';
 import confetti from 'canvas-confetti';
 
 const Success = () => {
-  const { credits, addCredits, consumeCredit } = useCredits();
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'failed'
   const [downloading, setDownloading] = useState(false);
@@ -199,28 +197,7 @@ const Success = () => {
           }
 
 
-          if (data.metadata?.documentType === "pay_stub_bundle_v1" || sessionStorage.getItem("axim_paystub_plan_type") === "bundle") {
-            try {
-              // Add 6 Document Credits to user profile via Quest Labs API
-              const userId = localStorage.getItem('axim_user_id') || searchParams.get('session_id');
-              await fetch('/api/grant-credits', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  userId,
-                  creditsToAdd: 6,
-                  creditType: 'DOCUMENT_CREDITS',
-                  description: 'Streamlined bundle redemption bonus',
-                  session_id: sessionId
-                })
-              });
 
-              // Also store locally for immediate sync after API confirms success
-              addCredits(6);
-            } catch (e) {
-              console.error('Failed to add credits via Quest', e);
-            }
-          }
 
           setStatus('success');
 
@@ -263,18 +240,14 @@ const Success = () => {
 
 
   useEffect(() => {
-    const isCreditRedemption = searchParams.get('session_id')?.startsWith('credit_redemption_');
     const hasAlreadyDownloaded = sessionStorage.getItem('auto_downloaded_' + searchParams.get('session_id'));
 
-    if (status === 'success' && !downloading && !autoDownloaded && !isCreditRedemption && !hasAlreadyDownloaded) {
+    if (status === 'success' && !downloading && !autoDownloaded && !hasAlreadyDownloaded) {
       setAutoDownloaded(true);
       sessionStorage.setItem('auto_downloaded_' + searchParams.get('session_id'), 'true');
-
-      // Deduct 1 credit for the auto-download if this was a new bundle purchase.
-      consumeCredit();
       handleDownload();
     }
-  }, [status, downloading, autoDownloaded, searchParams, consumeCredit]);
+  }, [status, downloading, autoDownloaded, searchParams]);
 
 
   const handleDownload = async () => {
@@ -388,16 +361,6 @@ const Success = () => {
         </div>
 
         <h1 className="text-4xl font-black text-white mb-4 tracking-tight">ORDER COMPLETE</h1>
-
-        {credits > 0 && (
-          <div className="bg-axim-teal/10 border border-axim-teal p-4 rounded-xl mb-6">
-            <p className="text-axim-teal font-bold mb-2">🎉 {credits >= 6 ? '6 document credits added to your account' : 'Credits Available'}</p>
-            <p className="text-sm text-white mb-4">Current Balance: {credits} credits</p>
-            <Link to="/app/generator" className="inline-block bg-axim-teal text-black font-bold px-6 py-2 rounded-lg hover:bg-white transition-all text-sm">
-              Use a Credit
-            </Link>
-          </div>
-        )}
 
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.

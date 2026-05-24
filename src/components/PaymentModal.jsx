@@ -71,6 +71,24 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
 
     try {
+
+      let erData, eeData, ppData, eaData, cdData;
+      if (planType === 'bundle') {
+          const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+          const queue = queueStr ? JSON.parse(queueStr) : [stateToStore];
+          erData = queue.map(s => ({ n: s.employerDetails?.name, a: s.employerDetails?.address, e: s.employerDetails?.ein }));
+          eeData = queue.map(s => ({ n: s.employeeDetails?.name, a: s.employeeDetails?.address, s: s.employeeDetails?.ssnLast4, m: s.employeeDetails?.maritalStatus, st: s.employeeDetails?.state }));
+          ppData = queue.map(s => s.payPeriod);
+          eaData = queue.map(s => (s.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })));
+          cdData = queue.map(s => (s.customDeductions || []).map(d => ({ n: d.name, a: d.amount })));
+      } else {
+          erData = { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein };
+          eeData = { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state };
+          ppData = storeState.payPeriod;
+          eaData = (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }));
+          cdData = (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }));
+      }
+
       const response = await fetch('/api/create-checkout-session', {
 
         method: 'POST',
@@ -80,11 +98,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
           metadata: {
             deliveryEmail: email,
             documentType: planType === "bundle" ? "pay_stub_bundle_v1" : "pay_stub_v1",
-            state_part_er: JSON.stringify({ n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein }),
-            state_part_ee: JSON.stringify({ n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state }),
-            state_part_pp: JSON.stringify(storeState.payPeriod),
-            state_part_ea: JSON.stringify((storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }))),
-            state_part_cd: JSON.stringify((storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount })))
+            state_part_er: JSON.stringify(erData),
+            state_part_ee: JSON.stringify(eeData),
+            state_part_pp: JSON.stringify(ppData),
+            state_part_ea: JSON.stringify(eaData),
+            state_part_cd: JSON.stringify(cdData)
           }
         })
       });
