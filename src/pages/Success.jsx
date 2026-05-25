@@ -186,8 +186,8 @@ const Success = () => {
                 employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
                 employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
                 payPeriod: fbPp,
-                earnings: fbEa.map(e => ({ type: e.t, hours: e.h, rate: e.r })),
-                customDeductions: fbCd.map(d => ({ name: d.n, amount: d.a }))
+                earnings: fbEa.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
+                customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a }))
               };
               hydrateStore(parsedDraft);
               recalculateAll();
@@ -255,12 +255,24 @@ const Success = () => {
     try {
       // PHASE 4: Request Secure Edge PDF Generation
             const headers = { 'Content-Type': 'application/json' };
-            const response = await fetch('/api/generate-paystub', {
+            let finalFormData = storeState;
+      if (sessionStorage.getItem('axim_paystub_plan_type') === 'bundle') {
+        const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+        if (queueStr) {
+          try {
+            finalFormData = JSON.parse(queueStr);
+          } catch (e) {
+            console.error("Failed to parse bundle queue", e);
+          }
+        }
+      }
+
+      const response = await fetch('/api/generate-paystub', {
         method: 'POST',
         headers,
         body: JSON.stringify({
           session_id: searchParams.get('session_id'),
-          formData: storeState
+          formData: finalFormData
         })
       });
 
@@ -298,17 +310,6 @@ const Success = () => {
       alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
     } finally {
       setDownloading(false);
-      resetFinancialDefaults();
-      // Keep employerDetails for subsequent uses, reset employee and temporary buffers
-      const resetState = usePayStubStore.getState();
-      hydrateStore({
-          ...resetState,
-          employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
-          payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' }
-      });
-      sessionStorage.removeItem('axim_paystub_draft');
-      sessionStorage.removeItem('axim_paystub_draft_queue');
-      sessionStorage.removeItem('paystub_delivery_email');
     }
   };
 
@@ -443,7 +444,22 @@ const Success = () => {
             Duplicate for Next Pay Period
           </button>
 
-          <Link to="/" className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-[10px]">
+          <Link
+            to="/"
+            onClick={() => {
+              resetFinancialDefaults();
+              const resetState = usePayStubStore.getState();
+              hydrateStore({
+                  ...resetState,
+                  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
+                  payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' }
+              });
+              sessionStorage.removeItem('axim_paystub_draft');
+              sessionStorage.removeItem('axim_paystub_draft_queue');
+              sessionStorage.removeItem('paystub_delivery_email');
+            }}
+            className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-[10px]"
+          >
             Return to Dashboard
           </Link>
         </div>
