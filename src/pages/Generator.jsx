@@ -1,4 +1,3 @@
-import { useCredits } from '../utils/useCredits';
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,7 +20,6 @@ const STEPS = [
 ];
 
 const Generator = () => {
-  const { credits } = useCredits();
 
   const storeState = usePayStubStore();
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -123,13 +121,6 @@ const Generator = () => {
       
 
 
-      {/* Credits Display */}
-      {credits > 0 && (
-        <div className="fixed top-4 right-4 z-50 bg-axim-teal/10 border border-axim-teal text-axim-teal text-xs font-bold px-4 py-2 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(0,229,255,0.2)]">
-          <FiLock className="w-3 h-3" />
-          {credits} Credits
-        </div>
-      )}
 
       {/* Top Progress Bar */}
       <div className="w-full h-1 bg-white/10 fixed top-0 left-0 z-50">
