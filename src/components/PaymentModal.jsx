@@ -72,7 +72,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
     try {
 
-      let erData, eeData, ppData, eaData, cdData;
+      let erData, eeData, ppData, eaData, cdData, miscData;
       if (planType === 'bundle') {
           const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
           const queue = queueStr ? JSON.parse(queueStr) : [stateToStore];
@@ -81,12 +81,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
           ppData = queue.map(s => s.payPeriod);
           eaData = queue.map(s => (s.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })));
           cdData = queue.map(s => (s.customDeductions || []).map(d => ({ n: d.name, a: d.amount })));
+          miscData = queue.map(s => ({ t: s.theme, ac: s.autoCalculate, ygo: s.ytdGrossOverridden, to: s.taxOverrides }));
       } else {
           erData = { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein };
           eeData = { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state };
           ppData = storeState.payPeriod;
           eaData = (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }));
           cdData = (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }));
+          miscData = { t: storeState.theme, ac: storeState.autoCalculate, ygo: storeState.ytdGrossOverridden, to: storeState.taxOverrides };
       }
 
       const response = await fetch('/api/create-checkout-session', {
@@ -102,7 +104,8 @@ const PaymentModal = ({ isOpen, onClose }) => {
             state_part_ee: JSON.stringify(eeData),
             state_part_pp: JSON.stringify(ppData),
             state_part_ea: JSON.stringify(eaData),
-            state_part_cd: JSON.stringify(cdData)
+            state_part_cd: JSON.stringify(cdData),
+            state_part_misc: JSON.stringify(miscData)
           }
         })
       });
@@ -197,7 +200,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
                 <div className="absolute top-0 right-0 bg-axim-gold text-black text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-bl-lg">Most Popular</div>
                 <div>
                   <p className="text-sm text-white font-medium flex items-center gap-2">Buy {BRANDING.bundleCredits - 1}, Get 1 Free <span className="bg-axim-teal text-black text-[9px] px-1.5 py-0.5 rounded font-black">+1</span></p>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">6 Credits Added to Account</p>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-1">6 Documents Added to Account</p>
                 </div>
                 <span className="text-axim-gold font-mono font-black text-xl">{BRANDING.bundlePrice}</span>
               </button>

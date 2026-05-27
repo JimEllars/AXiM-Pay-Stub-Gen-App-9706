@@ -181,13 +181,18 @@ const Success = () => {
               const fbPp = data.metadata.state_part_pp ? JSON.parse(data.metadata.state_part_pp) : {};
               const fbEa = data.metadata.state_part_ea ? JSON.parse(data.metadata.state_part_ea) : [];
               const fbCd = data.metadata.state_part_cd ? JSON.parse(data.metadata.state_part_cd) : [];
+              const fbMisc = data.metadata.state_part_misc ? JSON.parse(data.metadata.state_part_misc) : {};
 
               parsedDraft = {
                 employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
                 employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
                 payPeriod: fbPp,
                 earnings: fbEa.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
-                customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a }))
+                customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
+                theme: fbMisc.t || "Standard Professional",
+                autoCalculate: fbMisc.ac !== undefined ? fbMisc.ac : true,
+                ytdGrossOverridden: fbMisc.ygo || false,
+                taxOverrides: fbMisc.to || { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
               };
               hydrateStore(parsedDraft);
               recalculateAll();
@@ -209,7 +214,6 @@ const Success = () => {
             colors: ['#00e5ff', '#ffea00', '#ffffff']
           });
 
-          localStorage.removeItem('axim_paystub_draft_continuous');
 
           // Automatic Email Dispatch
           const savedEmail = sessionStorage.getItem('paystub_delivery_email');
