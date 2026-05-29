@@ -27,7 +27,6 @@ const Success = () => {
 
 
   const handleDuplicate = () => {
-    trackEvent('duplicate_rate');
 
     // 1. Get current store state
     const currentState = usePayStubStore.getState();
@@ -325,14 +324,11 @@ const Success = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       a.remove();
-      trackEvent('time_to_first_download', { session_id: searchParams.get('session_id') });
-
       // Telemetry Sync
+      const eventName = sessionStorage.getItem('axim_paystub_plan_type') === 'bundle' ? 'batch_bundle_downloaded' : 'single_generation_completed';
+      trackEvent(eventName, { session_id: searchParams.get('session_id') });
 
 
-      if (window.dataLayer) {
-         window.dataLayer.push({ event: "document_generated", type: "pay_stub", session_id: searchParams.get('session_id') });
-      }
     } catch (e) {
       console.error("Download Error:", e);
       alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
