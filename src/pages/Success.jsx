@@ -183,17 +183,41 @@ const Success = () => {
               const fbCd = data.metadata.state_part_cd ? JSON.parse(data.metadata.state_part_cd) : [];
               const fbMisc = data.metadata.state_part_misc ? JSON.parse(data.metadata.state_part_misc) : {};
 
-              parsedDraft = {
-                employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
-                employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
-                payPeriod: fbPp,
-                earnings: fbEa.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
-                customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
-                theme: fbMisc.t || "Standard Professional",
-                autoCalculate: fbMisc.ac !== undefined ? fbMisc.ac : true,
-                ytdGrossOverridden: fbMisc.ygo || false,
-                taxOverrides: fbMisc.to || { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
-              };
+              if (Array.isArray(fbEr)) {
+                const reconstructedQueue = fbEr.map((er, idx) => {
+                  const ee = fbEe[idx] || {};
+                  const pp = fbPp[idx] || {};
+                  const ea = fbEa[idx] || [];
+                  const cd = fbCd[idx] || [];
+                  const misc = fbMisc[idx] || {};
+
+                  return {
+                    employerDetails: { name: er.n, address: er.a, ein: er.e },
+                    employeeDetails: { name: ee.n, address: ee.a, ssnLast4: ee.s, maritalStatus: ee.m, state: ee.st },
+                    payPeriod: pp,
+                    earnings: ea.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
+                    customDeductions: cd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
+                    theme: misc.t || "Standard Professional",
+                    autoCalculate: misc.ac !== undefined ? fbMisc.ac : true,
+                    ytdGrossOverridden: misc.ygo || false,
+                    taxOverrides: misc.to || { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
+                  };
+                });
+                sessionStorage.setItem('axim_paystub_draft_queue', JSON.stringify(reconstructedQueue));
+                parsedDraft = reconstructedQueue[reconstructedQueue.length - 1];
+              } else {
+                parsedDraft = {
+                  employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
+                  employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
+                  payPeriod: fbPp,
+                  earnings: fbEa.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
+                  customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
+                  theme: fbMisc.t || "Standard Professional",
+                  autoCalculate: fbMisc.ac !== undefined ? fbMisc.ac : true,
+                  ytdGrossOverridden: fbMisc.ygo || false,
+                  taxOverrides: fbMisc.to || { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
+                };
+              }
               hydrateStore(parsedDraft);
               recalculateAll();
             } catch (e) {
