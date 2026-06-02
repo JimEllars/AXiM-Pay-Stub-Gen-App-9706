@@ -1,5 +1,4 @@
 import { BRANDING } from '../config/branding';
-import { syncDraftQueueToProfile } from '../store/usePayStubStore';
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +13,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [planType, setPlanType] = useState('single');
   const storeState = usePayStubStore();
+  const syncDraftQueueToProfile = usePayStubStore(state => state.syncDraftQueueToProfile);
   const navigate = useNavigate();
 
   const isValid =
@@ -183,7 +183,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
             <div className="grid grid-cols-1 gap-3">
               <button
-                onClick={() => setPlanType('single')}
+                onClick={() => {
+                  setPlanType('single');
+                  sessionStorage.removeItem('axim_paystub_draft_queue');
+                  syncDraftQueueToProfile([]);
+                }}
                 className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all ${planType === 'single' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
               >
                 <div>
@@ -194,7 +198,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
               </button>
 
               <button
-                onClick={() => setPlanType('bundle')}
+                onClick={() => {
+                  setPlanType('bundle');
+                  sessionStorage.removeItem('axim_paystub_draft_queue');
+                  syncDraftQueueToProfile([]);
+                }}
                 className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all relative overflow-hidden ${planType === 'bundle' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
               >
                 <div className="absolute top-0 right-0 bg-axim-gold text-black text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-bl-lg">Most Popular</div>

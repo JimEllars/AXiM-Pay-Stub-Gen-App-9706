@@ -104,17 +104,19 @@ const initialFormState = {
 };
 
 
-export const syncDraftQueueToProfile = async (queue) => {
+
+
+export const usePayStubStore = create(persist((set, get) => ({
+
+  ...initialFormState,
+
+  syncDraftQueueToProfile: async (queue) => {
     fetch('/api/save-draft-queue', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ queue })
     }).catch(() => {});
-  };
-
-export const usePayStubStore = create(persist((set, get) => ({
-
-  ...initialFormState,
+  },
 
   // PHASE 3: Re-hydration for Post-Checkout Workflow
 
@@ -244,7 +246,7 @@ addEarning: () => set((state) => ({
 
   updateEarning: (id, field, value) => {
     set((state) => ({
-      earnings: state.earnings.map(e => e.id === id ? { ...e, [field]: field === 'type' ? value : (parseFloat(value) || 0) } : e)
+      earnings: state.earnings.map(e => e.id === id ? { ...e, [field]: field === 'type' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '')) || 0) } : e)
     }));
     get().recalculateAll();
   },
@@ -261,7 +263,7 @@ addEarning: () => set((state) => ({
 
   updateCustomDeduction: (id, field, value) => {
     set((state) => ({
-      customDeductions: state.customDeductions.map(d => d.id === id ? { ...d, [field]: field === 'name' ? value : (parseFloat(value) || 0) } : d)
+      customDeductions: state.customDeductions.map(d => d.id === id ? { ...d, [field]: field === 'name' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '')) || 0) } : d)
     }));
     get().recalculateAll();
   },
@@ -275,7 +277,7 @@ addEarning: () => set((state) => ({
     set((state) => ({
       autoCalculate: false,
       taxOverrides: { ...state.taxOverrides, [taxType]: true },
-      calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(amount) || 0 } }
+      calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0 } }
     }));
     get().recalculateNetPay();
   },
@@ -300,7 +302,7 @@ addEarning: () => set((state) => ({
   updateYtdGross: (amount) => {
     set((state) => ({
       ytdGrossOverridden: true,
-      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(amount) || 0 }
+      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0 }
     }));
     get().recalculateAll();
   },

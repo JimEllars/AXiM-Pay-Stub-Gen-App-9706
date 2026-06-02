@@ -23,6 +23,14 @@ const Generator = () => {
 
   const storeState = usePayStubStore();
   const [previewUrl, setPreviewUrl] = useState(null);
+    // Enforce Context Isolation
+  useEffect(() => {
+    const activePlan = sessionStorage.getItem('axim_paystub_plan_type');
+    if (activePlan !== 'bundle') {
+      sessionStorage.removeItem('axim_paystub_draft_queue');
+    }
+  }, []);
+
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState(null);
   const [isShimmering, setIsShimmering] = useState(false);
