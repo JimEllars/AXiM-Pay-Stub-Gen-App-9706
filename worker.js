@@ -146,7 +146,7 @@ export default {
       const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
       const drawText = (text, x, y, size = 10, isBold = false, color = rgb(0, 0, 0)) => {
-        page.drawText(String(text || ''), { x, y, size, font: isBold ? helveticaBold : helveticaFont, color });
+        page.drawText(String(text ?? ''), { x, y, size, font: isBold ? helveticaBold : helveticaFont, color });
       };
 
       if (isPreview) {
