@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 
 const PreviewSection = ({ onFinalize }) => {
   const navigate = useNavigate();
+  const [uiError, setUiError] = useState("");
   const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, validateForm, theme, updateTheme } = usePayStubStore();
 
   return (
@@ -189,6 +190,11 @@ const PreviewSection = ({ onFinalize }) => {
       </div>
 
       {/* Action Bar */}
+      {uiError && (
+        <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg mb-4">
+          {uiError}
+        </div>
+      )}
       <div className="bg-glass border border-white/10 p-6 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-6">
         <div className="text-sm text-gray-400 font-light max-w-sm">
           Once finalized, you will be redirected to our secure payment gateway to unlock the unmarked, high-resolution PDF.
@@ -209,7 +215,7 @@ const PreviewSection = ({ onFinalize }) => {
               window.open(url, '_blank');
               setTimeout(() => window.URL.revokeObjectURL(url), 1000);
             } catch (err) {
-              alert("Failed to generate preview: " + err.message);
+              setUiError("Failed to generate preview: " + err.message);
             }
           }}
           className="hidden lg:flex group w-full sm:w-auto bg-transparent border border-axim-teal text-axim-teal font-black px-10 py-5 rounded-2xl hover:bg-axim-teal hover:text-bg-void transition-all duration-500 items-center justify-center gap-3 shadow-[0_0_15px_rgba(0,229,255,0.1)] disabled:opacity-50 disabled:cursor-not-allowed"

@@ -192,6 +192,10 @@ export const usePayStubStore = create(persist((set, get) => ({
     set((state) => {
       const newPayPeriod = { ...state.payPeriod, [field]: value };
 
+      if (field === 'frequency') {
+        state.ytdGrossOverridden = false;
+      }
+
       if (field === 'startDate' || field === 'frequency') {
         const startDate = field === 'startDate' ? value : newPayPeriod.startDate;
         if (startDate) {

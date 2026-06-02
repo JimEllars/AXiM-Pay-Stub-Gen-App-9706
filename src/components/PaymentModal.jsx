@@ -11,6 +11,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uiError, setUiError] = useState("");
   const [planType, setPlanType] = useState('single');
   const storeState = usePayStubStore();
   const syncDraftQueueToProfile = usePayStubStore(state => state.syncDraftQueueToProfile);
@@ -24,8 +25,10 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
 
   const handlePayment = async () => {
-    if (!email) {
-      alert("Please enter a delivery email.");
+    setUiError("");
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setUiError("Please enter a valid email address");
       return;
     }
     
@@ -132,7 +135,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
       }
     } catch (e) {
       console.error("Payment Initialization Failed:", e);
-      alert(`Billing Gateway Error: ${e.message}. Please try again or contact ${BRANDING.supportEmail}`);
+      setUiError(`Billing Gateway Error: ${e.message}. Please try again or contact ${BRANDING.supportEmail}`);
     } finally {
       setLoading(false);
     }
@@ -184,6 +187,18 @@ const PaymentModal = ({ isOpen, onClose }) => {
             <div className="grid grid-cols-1 gap-3">
               <button
                 onClick={() => {
+                  const existingQueueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+                  if (planType === 'bundle' && existingQueueStr) {
+                    try {
+                      const queue = JSON.parse(existingQueueStr);
+                      if (queue.length > 1) {
+                        const confirm = window.confirm("Switching to Single Pay Stub will clear your current batch queue. Are you sure you want to proceed?");
+                        if (!confirm) return;
+                      }
+                    } catch (e) {
+                      console.error(e);
+                    }
+                  }
                   setPlanType('single');
                   sessionStorage.removeItem('axim_paystub_draft_queue');
                   syncDraftQueueToProfile([]);
@@ -214,6 +229,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
+            {uiError && (
+              <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg mb-4">
+                {uiError}
+              </div>
+            )}
             <button 
               onClick={handlePayment}
               disabled={loading || !isValid}

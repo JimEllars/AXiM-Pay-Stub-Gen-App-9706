@@ -15,7 +15,7 @@ const Success = () => {
   const [downloading, setDownloading] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [autoDownloaded, setAutoDownloaded] = useState(false);
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput] = useState(sessionStorage.getItem('paystub_delivery_email') || '');
   const [errorMessage, setErrorMessage] = useState('');
   const [emailError, setEmailError] = useState(false);
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
