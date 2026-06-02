@@ -1,6 +1,5 @@
 import { trackEvent } from '../utils/telemetry';
 import { BRANDING } from '../config/branding';
-import { syncDraftQueueToProfile } from '../store/usePayStubStore';
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
@@ -18,6 +17,7 @@ const Success = () => {
   const [autoDownloaded, setAutoDownloaded] = useState(false);
   const [emailInput, setEmailInput] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [emailError, setEmailError] = useState(false);
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
   const resetFinancialDefaults = usePayStubStore(state => state.resetFinancialDefaults);
   const storeState = usePayStubStore();
@@ -241,15 +241,25 @@ const Success = () => {
           // Automatic Email Dispatch
           const savedEmail = sessionStorage.getItem('paystub_delivery_email');
           if (savedEmail && parsedDraft) {
-             fetch('/api/send-email', {
-               method: 'POST',
-               headers: { 'Content-Type': 'application/json' },
-               body: JSON.stringify({
-                 session_id: sessionId,
-                 email: savedEmail,
-                 formData: parsedDraft
-               })
-             }).catch(console.error);
+             try {
+                 fetch('/api/send-email', {
+                   method: 'POST',
+                   headers: { 'Content-Type': 'application/json' },
+                   body: JSON.stringify({
+                     session_id: sessionId,
+                     email: savedEmail,
+                     formData: parsedDraft
+                   })
+                 }).then(res => {
+                    if (!res.ok) setEmailError(true);
+                 }).catch((e) => {
+                    console.error(e);
+                    setEmailError(true);
+                 });
+             } catch (e) {
+                 console.error(e);
+                 setEmailError(true);
+             }
           }
         } else {
           setErrorMessage(data.error || 'Payment was not marked as paid.');
@@ -390,6 +400,11 @@ const Success = () => {
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>
+        {emailError && (
+          <div className="bg-red-500/10 text-red-400 p-4 rounded-xl mb-8 border border-red-500/20 text-sm font-medium">
+            Delivery encountered a temporary network issue. Your direct PDF download remains perfectly safe and available below.
+          </div>
+        )}
 
         <div className="space-y-4">
           <button 
