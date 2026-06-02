@@ -191,7 +191,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
                   if (planType === 'bundle' && existingQueueStr) {
                     try {
                       const queue = JSON.parse(existingQueueStr);
-                      if (queue.length > 1) {
+                      if (queue.length > 0) {
                         const confirm = window.confirm("Switching to Single Pay Stub will clear your current batch queue. Are you sure you want to proceed?");
                         if (!confirm) return;
                       }

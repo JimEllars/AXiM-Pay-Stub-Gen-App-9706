@@ -57,8 +57,8 @@ const Success = () => {
              newStartDate = nextYearStart + '-' + String(nextMonthStart).padStart(2, '0') + '-01';
 
              // properly clamp to end of month, including leap year safely using UTC 0th day approach
-             const newEnd = new Date(Date.UTC(nextYearStart, nextMonthStart, 0));
-             newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
+             const newEnd = new Date(nextYearStart, nextMonthStart, 0);
+             newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
         } else if (frequency === 'weekly') {
              newStartDate = addDays(startDate, 7);
              newEndDate = addDays(endDate, 7);
@@ -69,8 +69,8 @@ const Success = () => {
              const [sY, sM, sD] = startDate.split('-').map(Number);
              if (sD === 1 || sD < 15) {
                  newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
-                 const newEnd = new Date(Date.UTC(sY, sM, 0));
-                 newEndDate = newEnd.getUTCFullYear() + '-' + String(newEnd.getUTCMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getUTCDate()).padStart(2, '0');
+                 const newEnd = new Date(sY, sM, 0);
+                 newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
              } else {
                  const nextMonth = sM === 12 ? 1 : sM + 1;
                  const nextYear = sM === 12 ? sY + 1 : sY;
@@ -440,6 +440,7 @@ const Success = () => {
               <button
                 onClick={async () => {
                   if (!emailInput) return;
+                  setEmailError('');
                   setIsSendingEmail(true);
                   try {
                     const res = await fetch('/api/send-email', {
