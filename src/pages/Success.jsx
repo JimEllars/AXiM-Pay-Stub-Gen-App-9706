@@ -86,8 +86,8 @@ const Success = () => {
              const [y1, m1, d1] = payDate.split('-').map(Number);
              const nextMonth = m1 === 12 ? 1 : m1 + 1;
              const nextYear = m1 === 12 ? y1 + 1 : y1;
-             const nextPay = new Date(Date.UTC(nextYear, nextMonth - 1, d1));
-             newPayDate = nextPay.getUTCFullYear() + '-' + String(nextPay.getUTCMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getUTCDate()).padStart(2, '0');
+             const nextPay = new Date(nextYear, nextMonth - 1, d1);
+             newPayDate = nextPay.getFullYear() + '-' + String(nextPay.getMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getDate()).padStart(2, '0');
         } else if (frequency === 'weekly') {
              newPayDate = addDays(payDate, 7);
         } else if (frequency === 'bi-weekly') {
@@ -287,6 +287,30 @@ const Success = () => {
   }, [status, downloading, autoDownloaded, searchParams]);
 
 
+  const handleEmailSend = async () => {
+    if (!emailInput) return;
+    setEmailError('');
+    setIsSendingEmail(true);
+    try {
+      const res = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: searchParams.get('session_id'),
+          email: emailInput,
+          formData: storeState
+        })
+      });
+      if (!res.ok) throw new Error("Failed to send email");
+      alert("Email sent successfully!");
+      setEmailInput('');
+    } catch (e) {
+      alert("Error sending email: " + e.message);
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
   const handleDownload = async () => {
     setDownloading(true);
     try {
@@ -438,29 +462,7 @@ const Success = () => {
                 className="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-axim-teal transition-all font-mono text-sm"
               />
               <button
-                onClick={async () => {
-                  if (!emailInput) return;
-                  setEmailError('');
-                  setIsSendingEmail(true);
-                  try {
-                    const res = await fetch('/api/send-email', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        session_id: searchParams.get('session_id'),
-                        email: emailInput,
-                        formData: storeState
-                      })
-                    });
-                    if (!res.ok) throw new Error("Failed to send email");
-                    alert("Email sent successfully!");
-                    setEmailInput('');
-                  } catch (e) {
-                    alert("Error sending email: " + e.message);
-                  } finally {
-                    setIsSendingEmail(false);
-                  }
-                }}
+                onClick={handleEmailSend}
                 disabled={isSendingEmail || !emailInput}
                 className="bg-white/10 hover:bg-axim-teal hover:text-black text-white px-6 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center"
               >
