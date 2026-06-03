@@ -212,8 +212,14 @@ const PreviewSection = ({ onFinalize }) => {
               if (!res.ok) throw new Error("Preview generation failed");
               const blob = await res.blob();
               const url = window.URL.createObjectURL(blob);
-              window.open(url, '_blank');
-              setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+              const a = document.createElement('a');
+              a.href = url;
+              const sessionId = sessionStorage.getItem('axim_paystub_session_id') || Math.random().toString(36).substring(2, 10);
+              a.download = `Statement_${sessionId.substring(0, 8)}.pdf`;
+              document.body.appendChild(a);
+              a.click();
+              window.URL.revokeObjectURL(url);
+              a.remove();
             } catch (err) {
               setUiError("Failed to generate preview: " + err.message);
             }

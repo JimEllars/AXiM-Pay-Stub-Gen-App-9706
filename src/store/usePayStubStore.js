@@ -84,7 +84,7 @@ const TAX_RATES = {
 const initialFormState = {
   currentStep: 1,
   ytdGrossOverridden: false,
-  employerDetails: { name: '', address: '', ein: '', zipCode: '' },
+  employerDetails: { name: '', address: '', city: '', state: '', ein: '', zipCode: '' },
   employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' },
   earnings: [
@@ -279,7 +279,7 @@ addEarning: () => set((state) => ({
 
   updateTaxOverride: (taxType, amount) => {
     let parsedAmount = parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0;
-    if (taxType === 'stateIncomeTax' && parsedAmount > 1 && parsedAmount < 100) {
+    if (taxType === 'stateIncomeTax' && parsedAmount >= 1 && parsedAmount < 100) {
       parsedAmount = parsedAmount / 100;
     }
     set((state) => ({
