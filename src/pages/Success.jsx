@@ -318,14 +318,91 @@ const Success = () => {
             const headers = { 'Content-Type': 'application/json' };
             let finalFormData = storeState;
       if (sessionStorage.getItem('axim_paystub_plan_type') === 'bundle') {
-        const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+        let queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+        let parsedQueue = [];
         if (queueStr) {
           try {
-            finalFormData = JSON.parse(queueStr);
+            parsedQueue = JSON.parse(queueStr);
           } catch (e) {
             console.error("Failed to parse bundle queue", e);
           }
         }
+
+        if (!parsedQueue || parsedQueue.length === 0) {
+          // Dynamically reconstruct the 6-stub array if missing
+          const addDays = (dateStr, days) => {
+              if (!dateStr) return '';
+              const [y, m, d] = dateStr.split('-').map(Number);
+              const date = new Date(y, m - 1, d);
+              date.setDate(date.getDate() + days);
+              return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+          };
+
+          let currentStub = JSON.parse(JSON.stringify(storeState));
+          parsedQueue.push(currentStub);
+
+          for (let i = 1; i < 6; i++) {
+              let nextStub = JSON.parse(JSON.stringify(currentStub));
+              const { frequency, startDate, endDate, payDate } = nextStub.payPeriod;
+              let newStartDate = '';
+              let newEndDate = '';
+              let newPayDate = '';
+
+              if (startDate && endDate) {
+                  if (frequency === 'monthly') {
+                       const [y1, m1, d1] = endDate.split('-').map(Number);
+                       const nextMonthStart = m1 === 12 ? 1 : m1 + 1;
+                       const nextYearStart = m1 === 12 ? y1 + 1 : y1;
+                       newStartDate = nextYearStart + '-' + String(nextMonthStart).padStart(2, '0') + '-01';
+                       const newEnd = new Date(nextYearStart, nextMonthStart, 0);
+                       newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+                  } else if (frequency === 'weekly') {
+                       newStartDate = addDays(startDate, 7);
+                       newEndDate = addDays(endDate, 7);
+                  } else if (frequency === 'bi-weekly') {
+                       newStartDate = addDays(startDate, 14);
+                       newEndDate = addDays(endDate, 14);
+                  } else if (frequency === 'semi-monthly') {
+                       const [sY, sM, sD] = startDate.split('-').map(Number);
+                       if (sD === 1 || sD < 15) {
+                           newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
+                           const newEnd = new Date(sY, sM, 0);
+                           newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+                       } else {
+                           const nextMonth = sM === 12 ? 1 : sM + 1;
+                           const nextYear = sM === 12 ? sY + 1 : sY;
+                           newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                           newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
+                       }
+                  }
+              }
+
+              if (payDate) {
+                  if (frequency === 'monthly') {
+                       const [y1, m1, d1] = payDate.split('-').map(Number);
+                       const nextMonth = m1 === 12 ? 1 : m1 + 1;
+                       const nextYear = m1 === 12 ? y1 + 1 : y1;
+                       const nextPay = new Date(nextYear, nextMonth - 1, d1);
+                       newPayDate = nextPay.getFullYear() + '-' + String(nextPay.getMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getDate()).padStart(2, '0');
+                  } else if (frequency === 'weekly') {
+                       newPayDate = addDays(payDate, 7);
+                  } else if (frequency === 'bi-weekly') {
+                       newPayDate = addDays(payDate, 14);
+                  } else if (frequency === 'semi-monthly') {
+                       newPayDate = addDays(payDate, 15);
+                  }
+              }
+
+              nextStub.payPeriod.startDate = newStartDate;
+              nextStub.payPeriod.endDate = newEndDate;
+              nextStub.payPeriod.payDate = newPayDate;
+
+              parsedQueue.push(nextStub);
+              currentStub = nextStub;
+          }
+          sessionStorage.setItem('axim_paystub_draft_queue', JSON.stringify(parsedQueue));
+        }
+        finalFormData = parsedQueue;
       }
 
       const response = await fetch('/api/generate-paystub', {
@@ -353,7 +430,7 @@ const Success = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'PayStub.pdf';
+      a.download = `Statement_${searchParams.get('session_id').substring(0, 8)}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
