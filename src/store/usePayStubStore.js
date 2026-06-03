@@ -278,10 +278,14 @@ addEarning: () => set((state) => ({
   },
 
   updateTaxOverride: (taxType, amount) => {
+    let parsedAmount = parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0;
+    if (taxType === 'stateIncomeTax' && parsedAmount > 1 && parsedAmount < 100) {
+      parsedAmount = parsedAmount / 100;
+    }
     set((state) => ({
       autoCalculate: false,
       taxOverrides: { ...state.taxOverrides, [taxType]: true },
-      calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0 } }
+      calculatedTotals: { ...state.calculatedTotals, taxes: { ...state.calculatedTotals.taxes, [taxType]: parsedAmount } }
     }));
     get().recalculateNetPay();
   },
