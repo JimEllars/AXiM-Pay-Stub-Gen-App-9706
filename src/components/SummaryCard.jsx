@@ -36,28 +36,40 @@ const SummaryCard = () => {
             </span>
             <div className="flex flex-col gap-1 text-[9px] opacity-80">
                <button
+                 aria-label="Address OK Checklist Item"
+                 tabIndex={0}
                  onClick={() => { if (!(employerDetails?.address?.length > 5)) setCurrentStep(1); else if (!(employeeDetails?.address?.length > 5)) setCurrentStep(2); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(employerDetails?.address?.length > 5)) setCurrentStep(1); else if (!(employeeDetails?.address?.length > 5)) setCurrentStep(2); } }}
                  className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
                >
                  <div className={`w-2 h-2 rounded-full ${(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'bg-green-400' : 'bg-gray-500'}`} />
                  <span className={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Address OK</span>
                </button>
                <button
+                 aria-label="Tax ID OK Checklist Item"
+                 tabIndex={0}
                  onClick={() => { if (!(employerDetails?.ein?.length >= 9)) setCurrentStep(1); else if (!(employeeDetails?.ssnLast4?.length >= 4)) setCurrentStep(2); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(employerDetails?.ein?.length >= 9)) setCurrentStep(1); else if (!(employeeDetails?.ssnLast4?.length >= 4)) setCurrentStep(2); } }}
                  className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
                >
                  <div className={`w-2 h-2 rounded-full ${(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'bg-green-400' : 'bg-gray-500'}`} />
                  <span className={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Tax ID OK</span>
                </button>
                <button
+                 aria-label="Pay Date OK Checklist Item"
+                 tabIndex={0}
                  onClick={() => { if (!isPayDateValid) setCurrentStep(2); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!isPayDateValid) setCurrentStep(2); } }}
                  className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
                >
                  <div className={`w-2 h-2 rounded-full ${isPayDateValid ? 'bg-green-400' : 'bg-gray-500'}`} />
                  <span className={isPayDateValid ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Pay Date OK</span>
                </button>
                <button
+                 aria-label="Gross Pay OK Checklist Item"
+                 tabIndex={0}
                  onClick={() => { if (!(calculatedTotals?.currentGross > 0)) setCurrentStep(3); }}
+                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(calculatedTotals?.currentGross > 0)) setCurrentStep(3); } }}
                  className="flex items-center gap-1 hover:opacity-100 transition-opacity text-left focus:outline-none"
                >
                  <div className={`w-2 h-2 rounded-full ${(calculatedTotals?.currentGross > 0) ? 'bg-green-400' : 'bg-gray-500'}`} />

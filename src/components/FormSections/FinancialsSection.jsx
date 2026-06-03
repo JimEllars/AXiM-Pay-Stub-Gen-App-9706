@@ -175,7 +175,16 @@ const FinancialsSection = () => {
                 <input 
                   type="number" inputMode="decimal" pattern="[0-9]*" step="0.01"
                   value={calculatedTotals.taxes[key] || ''}
-                  onChange={(e) => updateTaxOverride(key, e.target.value)}
+                  onChange={(e) => {
+                    let val = e.target.value;
+                    if (key === 'stateIncomeTax') {
+                      let num = parseFloat(val);
+                      if (num > 1 && num < 100) {
+                        val = num / 100;
+                      }
+                    }
+                    updateTaxOverride(key, val);
+                  }}
                   className={`w-full bg-black/50 border ${taxOverrides[key] ? 'border-axim-gold/50' : 'border-white/10'} rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono transition-all`}
                 />
               </div>

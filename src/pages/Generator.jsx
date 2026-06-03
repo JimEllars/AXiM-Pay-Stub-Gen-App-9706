@@ -168,6 +168,7 @@ const Generator = () => {
             {STEPS.map((step) => (
               <button 
                 key={step.id}
+                aria-label={`Navigate to step ${step.title}`}
                 onClick={() => { if (step.id < currentStep || !isNextDisabled()) setCurrentStep(step.id); }}
                 className={`flex items-center gap-3 px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
                   currentStep === step.id 
@@ -200,6 +201,7 @@ const Generator = () => {
           {currentStep < 4 && (
             <div className="mt-10 flex justify-end">
               <button 
+                aria-label="Next Step"
                 onClick={() => setCurrentStep(prev => Math.min(prev + 1, 4))}
                 className="bg-white text-black font-bold px-8 py-3 rounded-lg hover:bg-axim-teal hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:shadow-none"
                 disabled={isNextDisabled()}

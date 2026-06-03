@@ -137,6 +137,7 @@ export default {
 
 
     async function generatePdf(formData, isPreview, masterPdfDoc, sessionId) {
+      const truncate = (str, max) => str && str.length > max ? str.substring(0, max) + '...' : str;
       const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, theme } = formData;
       const activeTheme = theme || 'Standard Professional';
 
@@ -159,9 +160,9 @@ export default {
       const rowStep = combinedItemsCount > 6 ? 11 : 15;
 
       if (activeTheme === 'Clean Minimal') {
-        drawText(employerDetails?.name || 'Company Name', 50, currentY, 18, true);
+        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, currentY, 18, true);
         currentY -= 15;
-        drawText(employerDetails?.address || 'Company Address', 50, currentY);
+        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -171,7 +172,7 @@ export default {
         currentY -= 40;
 
         drawText('Employee:', 50, currentY, 10, true);
-        drawText(employeeDetails?.name || 'Employee Name', 120, currentY);
+        drawText(truncate(employeeDetails?.name, 40) || 'Employee Name', 120, currentY);
         drawText('Pay Frequency:', 350, currentY, 10, true);
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
@@ -205,8 +206,8 @@ export default {
         currentY -= 30;
       } else if (activeTheme === 'Modern Slate') {
         page.drawRectangle({ x: 0, y: 690, width: 612, height: 102, color: rgb(0.05, 0.15, 0.2) });
-        drawText(employerDetails?.name || 'Company Name', 50, 750, 20, true, rgb(1, 1, 1));
-        drawText(employerDetails?.address || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
+        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, 750, 20, true, rgb(1, 1, 1));
+        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
         if (employerDetails?.ein) {
           drawText(`EIN: ${employerDetails.ein}`, 50, 715, 10, false, rgb(0.8, 0.8, 0.8));
         }
@@ -219,7 +220,7 @@ export default {
         drawText('PAY PERIOD', 350, currentY, 10, true, rgb(0, 0.9, 1));
 
         currentY -= 15;
-        drawText(employeeDetails?.name || 'Employee Name', 50, currentY, 12, true);
+        drawText(truncate(employeeDetails?.name, 40) || 'Employee Name', 50, currentY, 12, true);
         drawText(`Frequency: ${payPeriod?.frequency || 'N/A'}`, 350, currentY);
 
         currentY -= 15;
@@ -240,9 +241,9 @@ export default {
         currentY -= 20;
       } else {
         // Standard Professional
-        drawText(employerDetails?.name || 'Company Name', 50, currentY, 16, true);
+        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, currentY, 16, true);
         currentY -= 15;
-        drawText(employerDetails?.address || 'Company Address', 50, currentY);
+        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -253,7 +254,7 @@ export default {
 
         currentY -= 30;
         drawText('Employee:', 50, currentY, 10, true);
-        drawText(employeeDetails?.name || 'Employee Name', 120, currentY);
+        drawText(truncate(employeeDetails?.name, 40) || 'Employee Name', 120, currentY);
         drawText('Pay Frequency:', 350, currentY, 10, true);
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
@@ -462,6 +463,27 @@ export default {
            });
         }
 
+        if (status.metadata?.fulfilled === 'true') {
+           ctx.waitUntil(
+             fetch(`${apiBase}/v1/telemetry/ingest`, {
+               method: 'POST',
+               headers: {
+                 'Content-Type': 'application/json',
+                 'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+               },
+               body: JSON.stringify({
+                 event: 'transaction_secured',
+                 session_id
+               })
+             }).catch(e => console.error("Telemetry logging failed:", e))
+           );
+
+           return new Response(JSON.stringify({ error: "Session already fulfilled" }), {
+             status: 403,
+             headers: corsHeaders
+           });
+        }
+
         let finalPdfDoc;
         let docId;
 
@@ -495,6 +517,21 @@ export default {
             },
             body: vaultFormData
           }).catch(e => console.error("Vault upload failed:", e))
+        );
+
+        // Mark session as fulfilled
+        ctx.waitUntil(
+          fetch(`${apiBase}/functions/update-session`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+            },
+            body: JSON.stringify({
+              session_id,
+              metadata: { fulfilled: 'true' }
+            })
+          }).catch(e => console.error("Failed to mark session as fulfilled:", e))
         );
 
         // Telemetry logging for revenue_generated
