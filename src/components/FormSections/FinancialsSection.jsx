@@ -63,6 +63,11 @@ const FinancialsSection = () => {
                   type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Hours"
                   value={earning.hours || ''}
                   onChange={(e) => updateEarning(earning.id, 'hours', e.target.value)}
+                  onBlur={(e) => {
+                    let val = parseFloat(e.target.value);
+                    if (isNaN(val)) val = 0;
+                    updateEarning(earning.id, 'hours', val.toFixed(2));
+                  }}
                   disabled={earning.type === 'Bonus' || earning.type === 'Commission'}
                   className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm font-mono focus:border-axim-teal outline-none disabled:opacity-30 transition-all"
                 />
@@ -74,6 +79,11 @@ const FinancialsSection = () => {
                     type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Rate"
                     value={earning.rate || ''}
                     onChange={(e) => updateEarning(earning.id, 'rate', e.target.value)}
+                    onBlur={(e) => {
+                      let val = parseFloat(e.target.value);
+                      if (isNaN(val)) val = 0;
+                      updateEarning(earning.id, 'rate', val.toFixed(2));
+                    }}
                     className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm font-mono focus:border-axim-teal outline-none transition-all"
                   />
                 </div>
@@ -122,6 +132,11 @@ const FinancialsSection = () => {
                     type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Amount"
                     value={deduction.amount || ''}
                     onChange={(e) => updateCustomDeduction(deduction.id, 'amount', e.target.value)}
+                    onBlur={(e) => {
+                      let val = parseFloat(e.target.value);
+                      if (isNaN(val)) val = 0;
+                      updateCustomDeduction(deduction.id, 'amount', val.toFixed(2));
+                    }}
                     className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm font-mono focus:border-axim-teal outline-none transition-all"
                   />
                 </div>
@@ -185,6 +200,11 @@ const FinancialsSection = () => {
                     }
                     updateTaxOverride(key, val);
                   }}
+                  onBlur={(e) => {
+                    let val = parseFloat(e.target.value);
+                    if (isNaN(val)) val = 0;
+                    updateTaxOverride(key, val.toFixed(2));
+                  }}
                   className={`w-full bg-black/50 border ${taxOverrides[key] ? 'border-axim-gold/50' : 'border-white/10'} rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono transition-all`}
                 />
               </div>
@@ -201,6 +221,11 @@ const FinancialsSection = () => {
                 type="number" inputMode="decimal" pattern="[0-9]*" step="0.01"
                 value={calculatedTotals.ytdGross || ''}
                 onChange={(e) => updateYtdGross(e.target.value)}
+                onBlur={(e) => {
+                  let val = parseFloat(e.target.value);
+                  if (isNaN(val)) val = 0;
+                  updateYtdGross(val.toFixed(2));
+                }}
                 className="w-full bg-black/50 border border-white/10 rounded-lg pl-7 pr-3 py-2.5 text-white text-sm focus:border-axim-teal outline-none font-mono"
               />
             </div>

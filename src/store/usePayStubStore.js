@@ -250,7 +250,7 @@ addEarning: () => set((state) => ({
 
   updateEarning: (id, field, value) => {
     set((state) => ({
-      earnings: state.earnings.map(e => e.id === id ? { ...e, [field]: field === 'type' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '')) || 0) } : e)
+      earnings: state.earnings.map(e => e.id === id ? { ...e, [field]: field === 'type' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '').replace(/(\..*?)\..*/g, '$1')) || 0) } : e)
     }));
     get().recalculateAll();
   },
@@ -267,7 +267,7 @@ addEarning: () => set((state) => ({
 
   updateCustomDeduction: (id, field, value) => {
     set((state) => ({
-      customDeductions: state.customDeductions.map(d => d.id === id ? { ...d, [field]: field === 'name' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '')) || 0) } : d)
+      customDeductions: state.customDeductions.map(d => d.id === id ? { ...d, [field]: field === 'name' ? value : (parseFloat(String(value).replace(/[^\d.]/g, '').replace(/(\..*?)\..*/g, '$1')) || 0) } : d)
     }));
     get().recalculateAll();
   },
@@ -278,7 +278,7 @@ addEarning: () => set((state) => ({
   },
 
   updateTaxOverride: (taxType, amount) => {
-    let parsedAmount = parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0;
+    let parsedAmount = parseFloat(String(amount).replace(/[^\d.]/g, '').replace(/(\..*?)\..*/g, '$1')) || 0;
     if (taxType === 'stateIncomeTax' && parsedAmount >= 1 && parsedAmount < 100) {
       parsedAmount = parsedAmount / 100;
     }
@@ -310,7 +310,7 @@ addEarning: () => set((state) => ({
   updateYtdGross: (amount) => {
     set((state) => ({
       ytdGrossOverridden: true,
-      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(String(amount).replace(/[^\d.]/g, '')) || 0 }
+      calculatedTotals: { ...state.calculatedTotals, ytdGross: parseFloat(String(amount).replace(/[^\d.]/g, '').replace(/(\..*?)\..*/g, '$1')) || 0 }
     }));
     get().recalculateAll();
   },
