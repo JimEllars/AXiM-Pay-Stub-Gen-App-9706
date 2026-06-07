@@ -182,8 +182,9 @@ const Success = () => {
               const fbCd = data.metadata.state_part_cd ? JSON.parse(data.metadata.state_part_cd) : [];
               const fbMisc = data.metadata.state_part_misc ? JSON.parse(data.metadata.state_part_misc) : {};
 
-              if (Array.isArray(fbEr)) {
-                const reconstructedQueue = fbEr.map((er, idx) => {
+              const isBundle = Array.isArray(fbEr);
+              if (isBundle) {
+                let reconstructedQueue = fbEr.map((er, idx) => {
                   const ee = fbEe[idx] || {};
                   const pp = fbPp[idx] || {};
                   const ea = fbEa[idx] || [];
@@ -202,6 +203,77 @@ const Success = () => {
                     taxOverrides: misc.to || { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
                   };
                 });
+
+                if (reconstructedQueue.length === 1) {
+                  const addDays = (dateStr, days) => {
+                      if (!dateStr) return '';
+                      const [y, m, d] = dateStr.split('-').map(Number);
+                      const date = new Date(y, m - 1, d);
+                      date.setDate(date.getDate() + days);
+                      return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+                  };
+
+                  let currentStub = reconstructedQueue[0];
+                  for (let i = 1; i < 6; i++) {
+                      let nextStub = JSON.parse(JSON.stringify(currentStub));
+                      const { frequency, startDate, endDate, payDate } = currentStub.payPeriod;
+                      let newStartDate = '';
+                      let newEndDate = '';
+                      let newPayDate = '';
+
+                      if (startDate && endDate) {
+                          if (frequency === 'monthly') {
+                               const [y1, m1, d1] = endDate.split('-').map(Number);
+                               const nextMonthStart = m1 === 12 ? 1 : m1 + 1;
+                               const nextYearStart = m1 === 12 ? y1 + 1 : y1;
+                               newStartDate = nextYearStart + '-' + String(nextMonthStart).padStart(2, '0') + '-01';
+                               const newEnd = new Date(nextYearStart, nextMonthStart, 0);
+                               newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+                          } else if (frequency === 'weekly') {
+                               newStartDate = addDays(startDate, 7);
+                               newEndDate = addDays(endDate, 7);
+                          } else if (frequency === 'bi-weekly') {
+                               newStartDate = addDays(startDate, 14);
+                               newEndDate = addDays(endDate, 14);
+                          } else if (frequency === 'semi-monthly') {
+                               const [sY, sM, sD] = startDate.split('-').map(Number);
+                               if (sD === 1 || sD < 15) {
+                                   newStartDate = `${sY}-${String(sM).padStart(2, '0')}-16`;
+                                   const newEnd = new Date(sY, sM, 0);
+                                   newEndDate = newEnd.getFullYear() + '-' + String(newEnd.getMonth() + 1).padStart(2, '0') + '-' + String(newEnd.getDate()).padStart(2, '0');
+                               } else {
+                                   const nextMonth = sM === 12 ? 1 : sM + 1;
+                                   const nextYear = sM === 12 ? sY + 1 : sY;
+                                   newStartDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`;
+                                   newEndDate = `${nextYear}-${String(nextMonth).padStart(2, '0')}-15`;
+                               }
+                          }
+                      }
+
+                      if (payDate) {
+                          if (frequency === 'monthly') {
+                               const [y1, m1, d1] = payDate.split('-').map(Number);
+                               const nextMonth = m1 === 12 ? 1 : m1 + 1;
+                               const nextYear = m1 === 12 ? y1 + 1 : y1;
+                               const nextPay = new Date(nextYear, nextMonth - 1, d1);
+                               newPayDate = nextPay.getFullYear() + '-' + String(nextPay.getMonth() + 1).padStart(2, '0') + '-' + String(nextPay.getDate()).padStart(2, '0');
+                          } else if (frequency === 'weekly') {
+                               newPayDate = addDays(payDate, 7);
+                          } else if (frequency === 'bi-weekly') {
+                               newPayDate = addDays(payDate, 14);
+                          } else if (frequency === 'semi-monthly') {
+                               newPayDate = addDays(payDate, 15);
+                          }
+                      }
+
+                      nextStub.payPeriod.startDate = newStartDate;
+                      nextStub.payPeriod.endDate = newEndDate;
+                      nextStub.payPeriod.payDate = newPayDate;
+
+                      reconstructedQueue.push(nextStub);
+                      currentStub = nextStub;
+                  }
+                }
                 sessionStorage.setItem('axim_paystub_draft_queue', JSON.stringify(reconstructedQueue));
                 parsedDraft = reconstructedQueue[reconstructedQueue.length - 1];
               } else {
@@ -302,10 +374,10 @@ const Success = () => {
         })
       });
       if (!res.ok) throw new Error("Failed to send email");
-      alert("Email sent successfully!");
+      setEmailError('Success');
       setEmailInput('');
     } catch (e) {
-      alert("Error sending email: " + e.message);
+      setEmailError(e.message);
     } finally {
       setIsSendingEmail(false);
     }
@@ -442,7 +514,7 @@ const Success = () => {
 
     } catch (e) {
       console.error("Download Error:", e);
-      alert(`Download failed: ${e.message}. Please check your email for the backup copy.`);
+      setEmailError(`Download failed: ${e.message}. Please check your email for the backup copy.`);
     } finally {
       setDownloading(false);
     }
@@ -501,9 +573,14 @@ const Success = () => {
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>
-        {emailError && (
+        {emailError && emailError !== 'Success' && (
           <div className="bg-red-500/10 text-red-400 p-4 rounded-xl mb-8 border border-red-500/20 text-sm font-medium">
-            Delivery encountered a temporary network issue. Your direct PDF download remains perfectly safe and available below.
+            {emailError.includes("Download failed") ? emailError : "Delivery encountered an issue: " + emailError + ". Your direct PDF download remains perfectly safe and available below."}
+          </div>
+        )}
+        {emailError === 'Success' && (
+          <div className="bg-green-500/10 text-green-400 p-4 rounded-xl mb-8 border border-green-500/20 text-sm font-medium">
+            Email sent successfully!
           </div>
         )}
 

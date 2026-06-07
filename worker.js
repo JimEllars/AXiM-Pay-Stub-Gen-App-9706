@@ -160,9 +160,9 @@ export default {
       const rowStep = combinedItemsCount > 6 ? 11 : 15;
 
       if (activeTheme === 'Clean Minimal') {
-        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, currentY, 18, true);
+        drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, currentY, 18, true);
         currentY -= 15;
-        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, currentY);
+        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -206,8 +206,8 @@ export default {
         currentY -= 30;
       } else if (activeTheme === 'Modern Slate') {
         page.drawRectangle({ x: 0, y: 690, width: 612, height: 102, color: rgb(0.05, 0.15, 0.2) });
-        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, 750, 20, true, rgb(1, 1, 1));
-        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
+        drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, 750, 20, true, rgb(1, 1, 1));
+        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
         if (employerDetails?.ein) {
           drawText(`EIN: ${employerDetails.ein}`, 50, 715, 10, false, rgb(0.8, 0.8, 0.8));
         }
@@ -241,9 +241,9 @@ export default {
         currentY -= 20;
       } else {
         // Standard Professional
-        drawText(truncate(employerDetails?.name, 45) || 'Company Name', 50, currentY, 16, true);
+        drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, currentY, 16, true);
         currentY -= 15;
-        drawText(truncate(employerDetails?.address, 50) || 'Company Address', 50, currentY);
+        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -464,21 +464,7 @@ export default {
         }
 
         if (status.metadata?.fulfilled === 'true') {
-           ctx.waitUntil(
-             fetch(`${apiBase}/v1/telemetry/ingest`, {
-               method: 'POST',
-               headers: {
-                 'Content-Type': 'application/json',
-                 'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
-               },
-               body: JSON.stringify({
-                 event: 'transaction_secured',
-                 session_id
-               })
-             }).catch(e => console.error("Telemetry logging failed:", e))
-           );
-
-           return new Response(JSON.stringify({ error: "Session already fulfilled" }), {
+           return new Response(JSON.stringify({ error: "Session already fulfilled." }), {
              status: 403,
              headers: corsHeaders
            });
@@ -520,17 +506,16 @@ export default {
         );
 
         // Mark session as fulfilled
+        const stripeUpdateData = new URLSearchParams();
+        stripeUpdateData.append('metadata[fulfilled]', 'true');
         ctx.waitUntil(
-          fetch(`${apiBase}/functions/update-session`, {
+          fetch(`https://api.stripe.com/v1/checkout/sessions/${session_id}`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/x-www-form-urlencoded',
               'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
             },
-            body: JSON.stringify({
-              session_id,
-              metadata: { fulfilled: 'true' }
-            })
+            body: stripeUpdateData.toString()
           }).catch(e => console.error("Failed to mark session as fulfilled:", e))
         );
 
