@@ -25,6 +25,7 @@ const Generator = () => {
   const [previewUrl, setPreviewUrl] = useState(null);
     // Enforce Context Isolation
   useEffect(() => {
+    sessionStorage.removeItem('checkout_pending');
     const activePlan = sessionStorage.getItem('axim_paystub_plan_type');
     if (activePlan !== 'bundle') {
       sessionStorage.removeItem('axim_paystub_draft_queue');
