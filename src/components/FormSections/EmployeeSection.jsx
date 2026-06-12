@@ -57,8 +57,8 @@ const EmployeeSection = () => {
                       if (place) {
                          const city = place['place name'];
                          const state = place['state abbreviation'];
-                         updateEmployee('state', state);
-                         updateEmployee('city', city);
+                         if (!employeeDetails.state) updateEmployee('state', state);
+                         if (!employeeDetails.city) updateEmployee('city', city);
                       }
                     } else {
                       throw new Error('ZIP not found');

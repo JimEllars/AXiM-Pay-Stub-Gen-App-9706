@@ -153,11 +153,7 @@ export const usePayStubStore = create(persist((set, get) => ({
       if (digits.length <= 2) return digits;
       return `${digits.slice(0, 2)}-${digits.slice(2, 9)}`;
     }
-    if (type === 'ssn') {
-      if (digits.length <= 3) return digits;
-      if (digits.length <= 5) return `${digits.slice(0, 3)}-${digits.slice(3, 5)}`;
-      return `${digits.slice(0, 3)}-${digits.slice(3, 5)}-${digits.slice(5, 9)}`;
-    }
+    if (type === 'ssn') return digits.slice(0, 4);
     if (type === 'zip') {
       return digits.slice(0, 5);
     }

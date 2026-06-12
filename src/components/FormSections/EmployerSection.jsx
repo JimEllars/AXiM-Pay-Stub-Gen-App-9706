@@ -58,8 +58,8 @@ const EmployerSection = () => {
                       if (place) {
                          const city = place['place name'];
                          const state = place['state abbreviation'];
-                         updateEmployer('state', state);
-                         updateEmployer('city', city);
+                         if (!employerDetails.state) updateEmployer('state', state);
+                         if (!employerDetails.city) updateEmployer('city', city);
                       }
                     }
                   } catch (e) {
