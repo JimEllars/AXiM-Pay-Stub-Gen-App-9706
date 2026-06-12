@@ -25,7 +25,7 @@ export default {
 
     const corsHeaders = {
       'Access-Control-Allow-Origin': allowOrigin,
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
     // Handle CORS Pre-flight
@@ -162,7 +162,7 @@ export default {
       if (activeTheme === 'Clean Minimal') {
         drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, currentY, 18, true);
         currentY -= 15;
-        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, currentY);
+        drawText([employerDetails?.address, [employerDetails?.city, employerDetails?.state].filter(Boolean).join(', '), employerDetails?.zipCode].filter(Boolean).join(' ').trim() || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);
@@ -207,7 +207,7 @@ export default {
       } else if (activeTheme === 'Modern Slate') {
         page.drawRectangle({ x: 0, y: 690, width: 612, height: 102, color: rgb(0.05, 0.15, 0.2) });
         drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, 750, 20, true, rgb(1, 1, 1));
-        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
+        drawText([employerDetails?.address, [employerDetails?.city, employerDetails?.state].filter(Boolean).join(', '), employerDetails?.zipCode].filter(Boolean).join(' ').trim() || 'Company Address', 50, 730, 10, false, rgb(0.8, 0.8, 0.8));
         if (employerDetails?.ein) {
           drawText(`EIN: ${employerDetails.ein}`, 50, 715, 10, false, rgb(0.8, 0.8, 0.8));
         }
@@ -243,7 +243,7 @@ export default {
         // Standard Professional
         drawText((employerDetails?.name || 'Company Name').substring(0, 45) || 'Company Name', 50, currentY, 16, true);
         currentY -= 15;
-        drawText(`${employerDetails?.address || ''} ${employerDetails?.city || ''}, ${employerDetails?.state || ''} ${employerDetails?.zipCode || ''}`.trim() || 'Company Address', 50, currentY);
+        drawText([employerDetails?.address, [employerDetails?.city, employerDetails?.state].filter(Boolean).join(', '), employerDetails?.zipCode].filter(Boolean).join(' ').trim() || 'Company Address', 50, currentY);
         if (employerDetails?.ein) {
           currentY -= 15;
           drawText(`EIN: ${employerDetails.ein}`, 50, currentY);

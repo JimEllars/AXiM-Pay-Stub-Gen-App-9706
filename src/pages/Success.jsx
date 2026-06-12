@@ -129,6 +129,7 @@ const Success = () => {
       
       if (!sessionId) {
         setErrorMessage('No session ID found in the URL.');
+        sessionStorage.removeItem('checkout_pending');
         setStatus('failed');
         return;
       }
@@ -476,6 +477,8 @@ const Success = () => {
         }
         finalFormData = parsedQueue;
       }
+
+      sessionStorage.removeItem('checkout_pending');
 
       const response = await fetch('/api/generate-paystub', {
         method: 'POST',

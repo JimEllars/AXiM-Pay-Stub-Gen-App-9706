@@ -129,6 +129,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
       
       if (data.url) {
         // Redirect to actual Stripe Checkout
+        sessionStorage.setItem('checkout_pending', 'true');
         window.location.href = data.url;
       } else {
         throw new Error("Checkout URL not found in response.");
