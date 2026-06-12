@@ -124,6 +124,7 @@ const Success = () => {
 
 
   useEffect(() => {
+    sessionStorage.removeItem('checkout_pending');
     const verifyPayment = async () => {
       const sessionId = searchParams.get('session_id');
       

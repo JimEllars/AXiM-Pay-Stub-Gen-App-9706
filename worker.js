@@ -1,5 +1,26 @@
 
 import { PDFDocument, rgb, StandardFonts, degrees } from 'pdf-lib';
+
+async function fetchWithRetry(url, options, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      if (response.status >= 500 && response.status < 600) {
+        if (i === retries - 1) throw new Error(`Server error: ${response.status}`);
+        await new Promise(res => setTimeout(res, 1000));
+        continue;
+      }
+      return response;
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise(res => setTimeout(res, 1000));
+    }
+  }
+}
+
 /**
  * Generic Edge Proxy - Production v1.0
  * Handles Stripe orchestration, session verification, and PDF generation stubs.
@@ -496,7 +517,7 @@ export default {
         vaultFormData.append('trace_id', docId);
 
         ctx.waitUntil(
-          fetch(`${apiBase}/v1/vault-upload`, {
+          fetchWithRetry(`${apiBase}/v1/vault-upload`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
@@ -521,7 +542,7 @@ export default {
 
         // Telemetry logging for revenue_generated
         ctx.waitUntil(
-          fetch(`${apiBase}/v1/telemetry/ingest`, {
+          fetchWithRetry(`${apiBase}/v1/telemetry/ingest`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

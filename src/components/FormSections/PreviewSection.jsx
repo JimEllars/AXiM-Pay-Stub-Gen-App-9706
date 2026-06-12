@@ -214,8 +214,9 @@ const PreviewSection = ({ onFinalize }) => {
               const url = window.URL.createObjectURL(blob);
               const a = document.createElement('a');
               a.href = url;
-              const sessionId = sessionStorage.getItem('axim_paystub_session_id') || Math.random().toString(36).substring(2, 10);
-              a.download = `Statement_${sessionId.substring(0, 8)}.pdf`;
+
+              a.download = "DRAFT_PREVIEW_DoNotFile.pdf";
+              a.target = "_blank";
               document.body.appendChild(a);
               a.click();
               window.URL.revokeObjectURL(url);
