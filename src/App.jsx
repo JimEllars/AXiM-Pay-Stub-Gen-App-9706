@@ -26,15 +26,17 @@ function App() {
   }, []);
 
   return (
-    <ErrorBoundary>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/app/generator" element={<Generator />} />
-        <Route path="/success" element={<Success />} />
-      </Routes>
-    </Router>
-    </ErrorBoundary>
+    <div className="App">
+      <ErrorBoundary>
+        <Router>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/app/generator" element={<Generator />} />
+            <Route path="/success" element={<Success />} />
+          </Routes>
+        </Router>
+      </ErrorBoundary>
+    </div>
   );
 }
 

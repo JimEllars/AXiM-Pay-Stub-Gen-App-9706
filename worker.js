@@ -161,6 +161,7 @@ export default {
       const truncate = (str, max) => str && str.length > max ? str.substring(0, max) + '...' : str;
       const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, theme } = formData;
       const activeTheme = theme || 'Standard Professional';
+      const formatDate = (dateStr) => { if(!dateStr) return 'N/A'; const [y,m,d] = dateStr.split('-'); return y ? `${m}/${d}/${y}` : dateStr; };
 
       const pdfDoc = masterPdfDoc || await PDFDocument.create();
       const page = pdfDoc.addPage([612, 792]);
@@ -206,11 +207,11 @@ export default {
         drawText('Address:', 50, currentY, 10, true);
         drawText(employeeDetails?.address || 'Employee Address', 120, currentY);
         drawText('Pay Period:', 350, currentY, 10, true);
-        drawText(`${payPeriod?.startDate || 'N/A'} to ${payPeriod?.endDate || 'N/A'}`, 450, currentY);
+        drawText(`${formatDate(payPeriod?.startDate)} to ${formatDate(payPeriod?.endDate)}`, 450, currentY);
 
         currentY -= 15;
         drawText('Pay Date:', 350, currentY, 10, true);
-        drawText(payPeriod?.payDate || 'N/A', 450, currentY);
+        drawText(formatDate(payPeriod?.payDate), 450, currentY);
 
         currentY -= 15;
         drawText('State:', 50, currentY, 10, true);
@@ -246,11 +247,11 @@ export default {
 
         currentY -= 15;
         drawText(`SSN: XXX-XX-${employeeDetails?.ssnLast4 || 'XXXX'}`, 50, currentY);
-        drawText(`Period: ${payPeriod?.startDate || 'N/A'} to ${payPeriod?.endDate || 'N/A'}`, 350, currentY);
+        drawText(`Period: ${formatDate(payPeriod?.startDate)} to ${formatDate(payPeriod?.endDate)}`, 350, currentY);
 
         currentY -= 15;
         drawText(employeeDetails?.address || 'Employee Address', 50, currentY);
-        drawText(`Pay Date: ${payPeriod?.payDate || 'N/A'}`, 350, currentY);
+        drawText(`Pay Date: ${formatDate(payPeriod?.payDate)}`, 350, currentY);
 
         currentY -= 40;
 
@@ -288,11 +289,11 @@ export default {
         drawText('Address:', 50, currentY, 10, true);
         drawText(employeeDetails?.address || 'Employee Address', 120, currentY);
         drawText('Pay Period:', 350, currentY, 10, true);
-        drawText(`${payPeriod?.startDate || 'N/A'} to ${payPeriod?.endDate || 'N/A'}`, 450, currentY);
+        drawText(`${formatDate(payPeriod?.startDate)} to ${formatDate(payPeriod?.endDate)}`, 450, currentY);
 
         currentY -= 15;
         drawText('Pay Date:', 350, currentY, 10, true);
-        drawText(payPeriod?.payDate || 'N/A', 450, currentY);
+        drawText(formatDate(payPeriod?.payDate), 450, currentY);
 
         currentY -= 15;
         drawText('State:', 50, currentY, 10, true);
@@ -617,7 +618,7 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
             documentType: 'pay_stub',
             templateId: 'axim_premium_delivery',
             theme: formData?.theme || 'Standard Professional',
-            senderName: formData?.employerDetails?.name || 'Payroll Services',
+            senderName: (Array.isArray(formData) ? formData[0]?.employerDetails?.name : formData?.employerDetails?.name) || 'Payroll Services',
             formData
           }),
         });
