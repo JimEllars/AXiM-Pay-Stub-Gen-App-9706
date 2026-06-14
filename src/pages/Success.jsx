@@ -195,7 +195,7 @@ const Success = () => {
 
                   return {
                     employerDetails: { name: er.n, address: er.a, ein: er.e },
-                    employeeDetails: { name: ee.n, address: ee.a, ssnLast4: ee.s, maritalStatus: ee.m, state: ee.st },
+                    employeeDetails: { name: ee.n, address: ee.a, maritalStatus: ee.m, state: ee.st },
                     payPeriod: pp,
                     earnings: ea.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
                     customDeductions: cd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
@@ -281,7 +281,7 @@ const Success = () => {
               } else {
                 parsedDraft = {
                   employerDetails: { name: fbEr.n, address: fbEr.a, ein: fbEr.e },
-                  employeeDetails: { name: fbEe.n, address: fbEe.a, ssnLast4: fbEe.s, maritalStatus: fbEe.m, state: fbEe.st },
+                  employeeDetails: { name: fbEe.n, address: fbEe.a, maritalStatus: fbEe.m, state: fbEe.st },
                   payPeriod: fbPp,
                   earnings: fbEa.map((e, index) => ({ id: `e_${index}`, type: e.t, hours: e.h, rate: e.r })),
                   customDeductions: fbCd.map((d, index) => ({ id: `d_${index}`, name: d.n, amount: d.a })),
@@ -327,11 +327,11 @@ const Success = () => {
                  }).then(res => {
                     if (!res.ok) setEmailError(true);
                  }).catch((e) => {
-                    console.error(e);
+                    console.error('Email action failed');
                     setEmailError(true);
                  });
              } catch (e) {
-                 console.error(e);
+                 console.error('Email action failed');
                  setEmailError(true);
              }
           }
@@ -651,7 +651,7 @@ const Success = () => {
               const resetState = usePayStubStore.getState();
               hydrateStore({
                   ...resetState,
-                  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
+                  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', zipCode: '' },
                   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' }
               });
               sessionStorage.removeItem('axim_paystub_draft');

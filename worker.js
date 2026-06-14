@@ -199,11 +199,6 @@ export default {
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
         currentY -= 15;
-        if (employeeDetails?.ssnLast4) {
-          drawText('SSN:', 50, currentY, 10, true);
-          drawText(`XXX-XX-${employeeDetails.ssnLast4}`, 120, currentY);
-          currentY -= 15;
-        }
         drawText('Address:', 50, currentY, 10, true);
         drawText(employeeDetails?.address || 'Employee Address', 120, currentY);
         drawText('Pay Period:', 350, currentY, 10, true);
@@ -246,11 +241,10 @@ export default {
         drawText(`Frequency: ${payPeriod?.frequency || 'N/A'}`, 350, currentY);
 
         currentY -= 15;
-        drawText(`SSN: XXX-XX-${employeeDetails?.ssnLast4 || 'XXXX'}`, 50, currentY);
+        drawText(employeeDetails?.address || 'Employee Address', 50, currentY);
         drawText(`Period: ${formatDate(payPeriod?.startDate)} to ${formatDate(payPeriod?.endDate)}`, 350, currentY);
 
         currentY -= 15;
-        drawText(employeeDetails?.address || 'Employee Address', 50, currentY);
         drawText(`Pay Date: ${formatDate(payPeriod?.payDate)}`, 350, currentY);
 
         currentY -= 40;
@@ -281,11 +275,6 @@ export default {
         drawText(payPeriod?.frequency || 'N/A', 450, currentY);
 
         currentY -= 15;
-        if (employeeDetails?.ssnLast4) {
-          drawText('SSN:', 50, currentY, 10, true);
-          drawText(`XXX-XX-${employeeDetails.ssnLast4}`, 120, currentY);
-          currentY -= 15;
-        }
         drawText('Address:', 50, currentY, 10, true);
         drawText(employeeDetails?.address || 'Employee Address', 120, currentY);
         drawText('Pay Period:', 350, currentY, 10, true);
