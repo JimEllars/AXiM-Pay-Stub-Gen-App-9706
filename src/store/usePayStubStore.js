@@ -85,7 +85,7 @@ const initialFormState = {
   currentStep: 1,
   ytdGrossOverridden: false,
   employerDetails: { name: '', address: '', city: '', state: '', ein: '', zipCode: '' },
-  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', ssnLast4: '', zipCode: '' },
+  employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', zipCode: '' },
   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' },
   earnings: [
     { id: '1', type: 'Regular', hours: 40, rate: 0.00, currentTotal: 0.00, ytdTotal: 0.00 }
@@ -153,7 +153,7 @@ export const usePayStubStore = create(persist((set, get) => ({
       if (digits.length <= 2) return digits;
       return `${digits.slice(0, 2)}-${digits.slice(2, 9)}`;
     }
-    if (type === 'ssn') return digits.slice(0, 4);
+
     if (type === 'zip') {
       return digits.slice(0, 5);
     }
@@ -169,13 +169,14 @@ export const usePayStubStore = create(persist((set, get) => ({
     let maskedValue = value;
     if (field === 'ein') maskedValue = get().maskString(value, 'ein');
     else if (field === 'zip') maskedValue = get().maskString(value, 'zip');
+
     return { employerDetails: { ...state.employerDetails, [field]: maskedValue } };
   }),
   updateEmployee: (field, value) => {
     set((state) => {
       let maskedValue = value;
-      if (field === 'ssnLast4' || field === 'ssn') maskedValue = get().maskString(value, 'ssn');
-      else if (field === 'zip') maskedValue = get().maskString(value, 'zip');
+      if (field === 'zip') maskedValue = get().maskString(value, 'zip');
+
       return { employeeDetails: { ...state.employeeDetails, [field]: maskedValue } };
     });
     get().recalculateAll();

@@ -80,14 +80,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
           const queueStr = sessionStorage.getItem('axim_paystub_draft_queue');
           const queue = queueStr ? JSON.parse(queueStr) : [stateToStore];
           erData = queue.map(s => ({ n: s.employerDetails?.name, a: s.employerDetails?.address, e: s.employerDetails?.ein }));
-          eeData = queue.map(s => ({ n: s.employeeDetails?.name, a: s.employeeDetails?.address, s: s.employeeDetails?.ssnLast4, m: s.employeeDetails?.maritalStatus, st: s.employeeDetails?.state }));
+          eeData = queue.map(s => ({ n: s.employeeDetails?.name, a: s.employeeDetails?.address, m: s.employeeDetails?.maritalStatus, st: s.employeeDetails?.state }));
           ppData = queue.map(s => s.payPeriod);
           eaData = queue.map(s => (s.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })));
           cdData = queue.map(s => (s.customDeductions || []).map(d => ({ n: d.name, a: d.amount })));
           miscData = queue.map(s => ({ t: s.theme, ac: s.autoCalculate, ygo: s.ytdGrossOverridden, to: s.taxOverrides }));
       } else {
           erData = { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein };
-          eeData = { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, s: storeState.employeeDetails?.ssnLast4, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state };
+          eeData = { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state };
           ppData = storeState.payPeriod;
           eaData = (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }));
           cdData = (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }));
