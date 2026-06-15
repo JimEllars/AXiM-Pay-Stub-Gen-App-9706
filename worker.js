@@ -32,7 +32,7 @@ const previewRateLimitMap = new Map();
 function cleanupRateLimits() {
   const now = Date.now();
   for (const [ip, data] of previewRateLimitMap.entries()) {
-    if (now - data.startTime > 60000) {
+    if (now - data.startTime > 300000) {
       previewRateLimitMap.delete(ip);
     }
   }
@@ -178,6 +178,44 @@ export default {
       }
 
       let currentY = 730;
+
+      // Stateless Company Logo Handling
+      if (employerDetails?.companyLogo) {
+         try {
+             // The companyLogo is a base64 string from the frontend
+             const base64Data = employerDetails.companyLogo.split(',')[1];
+             const imageBytes = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+
+             let embeddedImage;
+             if (employerDetails.companyLogo.startsWith('data:image/png')) {
+                 embeddedImage = await pdfDoc.embedPng(imageBytes);
+             } else if (employerDetails.companyLogo.startsWith('data:image/jpeg')) {
+                 embeddedImage = await pdfDoc.embedJpg(imageBytes);
+             }
+
+             if (embeddedImage) {
+                 const { width, height } = embeddedImage.scale(1);
+                 // Max width/height to constrain logo dimensions
+                 const maxWidth = 100;
+                 const maxHeight = 50;
+                 const scaleRatio = Math.min(maxWidth / width, maxHeight / height);
+                 const finalWidth = width * scaleRatio;
+                 const finalHeight = height * scaleRatio;
+
+                 page.drawImage(embeddedImage, {
+                     x: 50,
+                     y: currentY - finalHeight + 15,
+                     width: finalWidth,
+                     height: finalHeight,
+                 });
+
+                 currentY -= (finalHeight + 10);
+             }
+         } catch (err) {
+             console.error('Failed to embed company logo:', err);
+         }
+      }
+
       const combinedItemsCount = (earnings?.length || 0) + (customDeductions?.length || 0);
       const rowStep = combinedItemsCount > 6 ? 11 : 15;
 
@@ -406,12 +444,12 @@ export default {
              rateData = { count: 1, startTime: now };
              previewRateLimitMap.set(ip, rateData);
            } else {
-             if (now - rateData.startTime < 60000) {
+             if (now - rateData.startTime < 300000) {
                rateData.count++;
-               if (rateData.count > 30) {
+               if (rateData.count > 10) {
                  return new Response(JSON.stringify({ error: "Too Many Requests" }), {
                    status: 429,
-                   headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '60' }
+                   headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '300' }
                  });
                }
              } else {

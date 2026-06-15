@@ -13,6 +13,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [uiError, setUiError] = useState("");
   const [planType, setPlanType] = useState('single');
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const storeState = usePayStubStore();
   const syncDraftQueueToProfile = usePayStubStore(state => state.syncDraftQueueToProfile);
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
   const handlePayment = async () => {
     setUiError("");
+    if (window.dataLayer) window.dataLayer.push({ event: 'begin_checkout', value: planType === 'bundle' ? 20.00 : 4.00, currency: 'USD' });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setUiError("Please enter a valid email address");
@@ -235,9 +237,22 @@ const PaymentModal = ({ isOpen, onClose }) => {
                 {uiError}
               </div>
             )}
+
+            <div className="flex items-start gap-3 mb-4">
+              <input
+                type="checkbox"
+                id="terms"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 bg-black/50 border border-white/10 rounded accent-axim-teal"
+              />
+              <label htmlFor="terms" className="text-xs text-gray-400 leading-tight">
+                I agree to the Terms of Service and acknowledge that these documents are generated for personal record-keeping or estimation purposes only. I assume all liability for their use.
+              </label>
+            </div>
             <button 
               onClick={handlePayment}
-              disabled={loading || !isValid}
+              disabled={loading || !isValid || !agreedToTerms}
               className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(0,229,255,0.2)]"
             >
               {loading ? (
