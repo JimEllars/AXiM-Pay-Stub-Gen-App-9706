@@ -76,6 +76,30 @@ const EmployerSection = () => {
               )}
             </div>
           </div>
+
+          <div className="flex flex-col gap-1.5 mb-4 md:col-span-2">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex justify-between">Company Logo (Optional)</label>
+            <input
+              type="file"
+              accept="image/png, image/jpeg"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 500 * 1024) {
+                  alert("File size exceeds 500KB. Please choose a smaller image.");
+                  e.target.value = '';
+                  return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  updateEmployer('companyLogo', reader.result);
+                };
+                reader.readAsDataURL(file);
+              }}
+              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white"
+            />
+          </div>
+
         </div>
       </div>
     </div>

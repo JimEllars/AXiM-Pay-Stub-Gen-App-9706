@@ -84,7 +84,7 @@ const TAX_RATES = {
 const initialFormState = {
   currentStep: 1,
   ytdGrossOverridden: false,
-  employerDetails: { name: '', address: '', city: '', state: '', ein: '', zipCode: '' },
+  employerDetails: { name: '', address: '', city: '', state: '', ein: '', zipCode: '', companyLogo: null },
   employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', zipCode: '' },
   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' },
   earnings: [

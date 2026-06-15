@@ -513,7 +513,9 @@ const Success = () => {
       a.remove();
       // Telemetry Sync
       const eventName = sessionStorage.getItem('axim_paystub_plan_type') === 'bundle' ? 'batch_bundle_downloaded' : 'single_generation_completed';
-      trackEvent(eventName, { session_id: searchParams.get('session_id') });
+      const value = sessionStorage.getItem('axim_paystub_plan_type') === 'bundle' ? 20.00 : 4.00;
+      trackEvent(eventName, { session_id: searchParams.get('session_id'), value, currency: 'USD' });
+      trackEvent('document_generated', { session_id: searchParams.get('session_id'), value, currency: 'USD' });
 
 
     } catch (e) {
