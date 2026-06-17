@@ -36,7 +36,7 @@ const SummaryCard = () => {
             </span>
             <div className="flex flex-col gap-1 text-[9px] opacity-80">
                <button
-                 aria-label="Address OK Checklist Item"
+                 aria-label="Address OK Checklist Item" role="button" aria-pressed={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? "true" : "false"}
                  tabIndex={0}
                  onClick={() => { if (!(employerDetails?.address?.length > 5)) setCurrentStep(1); else if (!(employeeDetails?.address?.length > 5)) setCurrentStep(2); }}
                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(employerDetails?.address?.length > 5)) setCurrentStep(1); else if (!(employeeDetails?.address?.length > 5)) setCurrentStep(2); } }}
@@ -46,7 +46,7 @@ const SummaryCard = () => {
                  <span className={(employerDetails?.address?.length > 5 && employeeDetails?.address?.length > 5) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Address OK</span>
                </button>
                <button
-                 aria-label="Tax ID OK Checklist Item"
+                 aria-label="Tax ID OK Checklist Item" role="button" aria-pressed={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? "true" : "false"}
                  tabIndex={0}
                  onClick={() => { if (!(employerDetails?.ein?.length >= 9)) setCurrentStep(1); else if (!(employeeDetails?.ssnLast4?.length >= 4)) setCurrentStep(2); }}
                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(employerDetails?.ein?.length >= 9)) setCurrentStep(1); else if (!(employeeDetails?.ssnLast4?.length >= 4)) setCurrentStep(2); } }}
@@ -56,7 +56,7 @@ const SummaryCard = () => {
                  <span className={(employerDetails?.ein?.length >= 9 && employeeDetails?.ssnLast4?.length >= 4) ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Tax ID OK</span>
                </button>
                <button
-                 aria-label="Pay Date OK Checklist Item"
+                 aria-label="Pay Date OK Checklist Item" role="button" aria-pressed={isPayDateValid ? "true" : "false"}
                  tabIndex={0}
                  onClick={() => { if (!isPayDateValid) setCurrentStep(2); }}
                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!isPayDateValid) setCurrentStep(2); } }}
@@ -66,7 +66,7 @@ const SummaryCard = () => {
                  <span className={isPayDateValid ? 'text-green-400' : 'text-gray-400 hover:text-white'}>Pay Date OK</span>
                </button>
                <button
-                 aria-label="Gross Pay OK Checklist Item"
+                 aria-label="Gross Pay OK Checklist Item" role="button" aria-pressed={(calculatedTotals?.currentGross > 0) ? "true" : "false"}
                  tabIndex={0}
                  onClick={() => { if (!(calculatedTotals?.currentGross > 0)) setCurrentStep(3); }}
                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (!(calculatedTotals?.currentGross > 0)) setCurrentStep(3); } }}

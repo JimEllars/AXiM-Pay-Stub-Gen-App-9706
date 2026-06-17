@@ -193,6 +193,21 @@ export const usePayStubStore = create(persist((set, get) => ({
         state.ytdGrossOverridden = false;
       }
 
+      // Enforce Chronological Date Guards
+      if (field === 'endDate' && newPayPeriod.startDate) {
+        if (new Date(newPayPeriod.endDate) < new Date(newPayPeriod.startDate)) {
+          newPayPeriod.startDate = newPayPeriod.endDate;
+        }
+      }
+      if (field === 'payDate' && newPayPeriod.endDate) {
+        if (new Date(newPayPeriod.payDate) < new Date(newPayPeriod.endDate)) {
+          newPayPeriod.endDate = newPayPeriod.payDate;
+          if (newPayPeriod.startDate && new Date(newPayPeriod.endDate) < new Date(newPayPeriod.startDate)) {
+            newPayPeriod.startDate = newPayPeriod.endDate;
+          }
+        }
+      }
+
       if (field === 'startDate' || field === 'frequency') {
         const startDate = field === 'startDate' ? value : newPayPeriod.startDate;
         if (startDate) {
