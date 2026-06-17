@@ -158,6 +158,7 @@ export default {
 
 
     async function generatePdf(formData, isPreview, masterPdfDoc, sessionId) {
+      const formatCurrency = (num) => Number(num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       const truncate = (str, max) => str && str.length > max ? str.substring(0, max) + '...' : str;
       const { employerDetails, employeeDetails, payPeriod, earnings, customDeductions, calculatedTotals, theme } = formData;
       const activeTheme = theme || 'Standard Professional';
@@ -347,18 +348,19 @@ export default {
       drawText('EARNINGS', 50, rowY, 10, true);
       rowY -= 15;
       if (earnings && Array.isArray(earnings)) {
-        earnings.forEach(e => {
+        const validEarnings = earnings.filter(e => e.currentTotal > 0);
+        validEarnings.forEach(e => {
           drawText(`${e.type} (${e.hours}h)`, 50, rowY);
-          drawText(`${(e.currentTotal || 0).toFixed(2)}`, 250, rowY);
-          drawText(`${(e.ytdTotal || 0).toFixed(2)}`, 350, rowY);
+          drawText(`\${formatCurrency(e.currentTotal || 0)}`, 250, rowY);
+          drawText(`\${formatCurrency(e.ytdTotal || 0)}`, 350, rowY);
           rowY -= rowStep;
         });
       }
 
       rowY -= 5;
       drawText('Gross Pay:', 50, rowY, 10, true);
-      drawText(`${(currentGross).toFixed(2)}`, 250, rowY, 10, true);
-      drawText(`${(ytdGross).toFixed(2)}`, 350, rowY, 10, true);
+      drawText(`\${formatCurrency(currentGross)}`, 250, rowY, 10, true);
+      drawText(`\${formatCurrency(ytdGross)}`, 350, rowY, 10, true);
 
       rowY -= 25;
 
@@ -369,9 +371,9 @@ export default {
 
       const drawDeductionRow = (label, currentVal, customYtd) => {
           drawText(label, 50, rowY);
-          drawText(`${(currentVal || 0).toFixed(2)}`, 250, rowY);
+          drawText(`\${formatCurrency(currentVal || 0)}`, 250, rowY);
           const ytdVal = customYtd !== undefined ? customYtd : (currentVal * ytdRatio);
-          drawText(`${(ytdVal || 0).toFixed(2)}`, 350, rowY);
+          drawText(`\${formatCurrency(ytdVal || 0)}`, 350, rowY);
           rowY -= rowStep;
       };
 
@@ -384,7 +386,8 @@ export default {
       }
 
       if (customDeductions && Array.isArray(customDeductions)) {
-        customDeductions.forEach(d => {
+        const validCustomDeductions = customDeductions.filter(d => d.amount > 0);
+        validCustomDeductions.forEach(d => {
           drawDeductionRow(d.name || 'Deduction', d.amount, d.ytd);
         });
       }
@@ -392,8 +395,8 @@ export default {
       rowY -= 5;
       drawText('Total Deductions:', 50, rowY, 10, true);
       const totalDeductionsCurrent = calculatedTotals?.totalDeductions || 0;
-      drawText(`${(totalDeductionsCurrent).toFixed(2)}`, 250, rowY, 10, true);
-      drawText(`${(totalDeductionsCurrent * ytdRatio).toFixed(2)}`, 350, rowY, 10, true);
+      drawText(`\${formatCurrency(totalDeductionsCurrent)}`, 250, rowY, 10, true);
+      drawText(`\${formatCurrency(totalDeductionsCurrent * ytdRatio)}`, 350, rowY, 10, true);
 
       const finalY = rowY - 40;
 
@@ -401,12 +404,12 @@ export default {
         page.drawLine({ start: { x: 50, y: finalY + 20 }, end: { x: 550, y: finalY + 20 }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
         drawText('NET PAY:', 200, finalY, 14, true);
         const netPayCurrent = calculatedTotals?.netPay || 0;
-        drawText(`${(netPayCurrent).toFixed(2)}`, 350, finalY, 14, true);
+        drawText(`\${formatCurrency(netPayCurrent)}`, 350, finalY, 14, true);
       } else if (activeTheme === 'Modern Slate') {
         page.drawRectangle({ x: 45, y: finalY - 10, width: 510, height: 30, color: rgb(0.05, 0.15, 0.2) });
         drawText('NET PAY', 50, finalY, 14, true, rgb(1, 1, 1));
         const netPayCurrent = calculatedTotals?.netPay || 0;
-        drawText(`${(netPayCurrent).toFixed(2)}`, 350, finalY, 14, true, rgb(0, 0.9, 1));
+        drawText(`\${formatCurrency(netPayCurrent)}`, 350, finalY, 14, true, rgb(0, 0.9, 1));
       } else {
         // Classic
         page.drawLine({ start: { x: 50, y: finalY + 20 }, end: { x: 550, y: finalY + 20 }, thickness: 1, color: rgb(0.8, 0.8, 0.8) });
@@ -414,7 +417,7 @@ export default {
         page.drawRectangle({ x: 230, y: finalY - 10, width: 200, height: 30, borderColor: rgb(0.6, 0.6, 0.6), borderWidth: 1, color: rgb(0.9, 0.9, 0.9) });
         drawText('NET PAY:', 250, finalY, 14, true);
         const netPayCurrent = calculatedTotals?.netPay || 0;
-        drawText(`${(netPayCurrent).toFixed(2)}`, 350, finalY, 14, true);
+        drawText(`\${formatCurrency(netPayCurrent)}`, 350, finalY, 14, true);
       }
 
       drawText('This document is a generic estimation for personal record-keeping only.', 100, 30, 8, false);

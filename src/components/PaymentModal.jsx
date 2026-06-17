@@ -189,6 +189,28 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
             <div className="grid grid-cols-1 gap-3">
               <button
+                role="button"
+                aria-pressed={planType === 'single' ? "true" : "false"}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const existingQueueStr = sessionStorage.getItem('axim_paystub_draft_queue');
+                    if (planType === 'bundle' && existingQueueStr) {
+                      try {
+                        const queue = JSON.parse(existingQueueStr);
+                        if (queue.length > 0) {
+                          const confirm = window.confirm("Switching to Single Pay Stub will clear your current batch queue. Are you sure you want to proceed?");
+                          if (!confirm) return;
+                        }
+                      } catch (e) {
+                        console.error(e);
+                      }
+                    }
+                    setPlanType('single');
+                    sessionStorage.removeItem('axim_paystub_draft_queue');
+                    syncDraftQueueToProfile([]);
+                  }
+                }}
                 onClick={() => {
                   const existingQueueStr = sessionStorage.getItem('axim_paystub_draft_queue');
                   if (planType === 'bundle' && existingQueueStr) {
@@ -216,6 +238,16 @@ const PaymentModal = ({ isOpen, onClose }) => {
               </button>
 
               <button
+                role="button"
+                aria-pressed={planType === 'bundle' ? "true" : "false"}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setPlanType('bundle');
+                    sessionStorage.removeItem('axim_paystub_draft_queue');
+                    syncDraftQueueToProfile([]);
+                  }
+                }}
                 onClick={() => {
                   setPlanType('bundle');
                   sessionStorage.removeItem('axim_paystub_draft_queue');
