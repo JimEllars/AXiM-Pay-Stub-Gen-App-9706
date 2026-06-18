@@ -17,6 +17,7 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
 const EmployerSection = () => {
   const { employerDetails, updateEmployer } = usePayStubStore();
   const [isZipLoading, setIsZipLoading] = useState(false);
+  const [fileError, setFileError] = useState('');
 
   return (
     <div className="space-y-8">
@@ -83,10 +84,11 @@ const EmployerSection = () => {
               type="file"
               accept="image/png, image/jpeg"
               onChange={(e) => {
+                setFileError('');
                 const file = e.target.files[0];
                 if (!file) return;
-                if (file.size > 500 * 1024) {
-                  alert("File size exceeds 500KB. Please choose a smaller image.");
+                if (file.size > 300 * 1024) {
+                  setFileError("Logo must be under 300KB");
                   e.target.value = '';
                   return;
                 }
@@ -96,8 +98,9 @@ const EmployerSection = () => {
                 };
                 reader.readAsDataURL(file);
               }}
-              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white"
+              className={`bg-black/50 border ${fileError ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white`}
             />
+            {fileError && <span className="text-red-500 text-xs mt-1">{fileError}</span>}
           </div>
 
         </div>

@@ -582,6 +582,8 @@ export default {
             body: JSON.stringify({
               event: 'revenue_generated',
               type: 'pay_stub',
+              source: 'axim_paystub_generator',
+              environment: 'edge',
               session_id,
               amount: Array.isArray(formData) ? 20.00 : 4.00,
               trace_id: docId
