@@ -591,25 +591,27 @@ const Success = () => {
         )}
 
         <div className="space-y-4">
-          <button 
-            onClick={handleDownload}
-            disabled={downloading}
-            className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-[0_0_40px_rgba(0,229,255,0.2)]"
-          >
-            {downloading ? (
-              <div className="flex items-center gap-3">
-                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
-                    <SafeIcon icon={FiLoader} />
-                 </motion.div>
-                 <span>Success! Your document is downloading...</span>
-              </div>
-            ) : (
-              <>
-                <SafeIcon icon={FiDownload} />
-                Download Final PDF
-              </>
-            )}
-          </button>
+          <div>
+            <button
+              onClick={handleDownload}
+              className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,229,255,0.2)]"
+            >
+              {downloading ? (
+                <div className="flex items-center gap-3">
+                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}>
+                      <SafeIcon icon={FiLoader} />
+                   </motion.div>
+                   <span>Download Final PDF</span>
+                </div>
+              ) : (
+                <>
+                  <SafeIcon icon={FiDownload} />
+                  Download Final PDF
+                </>
+              )}
+            </button>
+            <p className="text-center text-sm text-gray-400 mt-3 font-medium">If your download didn't start automatically, tap here.</p>
+          </div>
           
           <div className="mt-8 pt-8 border-t border-white/10">
             <p className="text-xs text-gray-500 mb-4 uppercase tracking-widest font-bold">Email My Document</p>
