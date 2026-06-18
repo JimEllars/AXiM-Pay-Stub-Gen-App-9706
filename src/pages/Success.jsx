@@ -272,6 +272,21 @@ const Success = () => {
                       nextStub.payPeriod.endDate = newEndDate;
                       nextStub.payPeriod.payDate = newPayDate;
 
+
+                      // Scale YTD values by the period multiplier
+                      const multiplier = i + 1;
+                      nextStub.calculatedTotals.ytdGross = currentStub.calculatedTotals.ytdGross + (currentStub.calculatedTotals.currentGross * i);
+
+                      nextStub.earnings = nextStub.earnings.map(e => ({
+                        ...e,
+                        ytdTotal: e.ytdTotal + (e.currentTotal * i)
+                      }));
+
+                      nextStub.customDeductions = nextStub.customDeductions.map(d => ({
+                        ...d,
+                        ytd: d.ytd + (d.amount * i)
+                      }));
+
                       reconstructedQueue.push(nextStub);
                       currentStub = nextStub;
                   }
@@ -476,6 +491,21 @@ const Success = () => {
               nextStub.payPeriod.startDate = newStartDate;
               nextStub.payPeriod.endDate = newEndDate;
               nextStub.payPeriod.payDate = newPayDate;
+
+
+                      // Scale YTD values by the period multiplier
+                      const multiplier = i + 1;
+                      nextStub.calculatedTotals.ytdGross = currentStub.calculatedTotals.ytdGross + (currentStub.calculatedTotals.currentGross * i);
+
+                      nextStub.earnings = nextStub.earnings.map(e => ({
+                        ...e,
+                        ytdTotal: e.ytdTotal + (e.currentTotal * i)
+                      }));
+
+                      nextStub.customDeductions = nextStub.customDeductions.map(d => ({
+                        ...d,
+                        ytd: d.ytd + (d.amount * i)
+                      }));
 
               parsedQueue.push(nextStub);
               currentStub = nextStub;

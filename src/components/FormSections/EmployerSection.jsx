@@ -81,6 +81,7 @@ const EmployerSection = () => {
           <div className="flex flex-col gap-1.5 mb-4 md:col-span-2">
             <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex justify-between">Company Logo (Optional)</label>
             <input
+              id="logo-upload-input"
               type="file"
               accept="image/png, image/jpeg"
               onChange={(e) => {
@@ -89,6 +90,11 @@ const EmployerSection = () => {
                 if (!file) return;
                 if (file.size > 300 * 1024) {
                   setFileError("Logo must be under 300KB");
+                  e.target.value = '';
+                  return;
+                }
+                if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
+                  setFileError('Only JPG or PNG images are supported.');
                   e.target.value = '';
                   return;
                 }
@@ -101,6 +107,21 @@ const EmployerSection = () => {
               className={`bg-black/50 border ${fileError ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white`}
             />
             {fileError && <span className="text-red-500 text-xs mt-1">{fileError}</span>}
+            {employerDetails.companyLogo && (
+              <div className="mt-2 text-right">
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateEmployer('companyLogo', null);
+                    const fileInput = document.getElementById('logo-upload-input');
+                    if (fileInput) fileInput.value = '';
+                  }}
+                  className="text-xs text-red-500 hover:text-red-400 font-bold transition-colors"
+                >
+                  Remove Logo
+                </button>
+              </div>
+            )}
           </div>
 
         </div>
