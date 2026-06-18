@@ -17,7 +17,7 @@ const Success = () => {
   const [autoDownloaded, setAutoDownloaded] = useState(false);
   const [emailInput, setEmailInput] = useState(sessionStorage.getItem('paystub_delivery_email') || '');
   const [errorMessage, setErrorMessage] = useState('');
-  const [emailError, setEmailError] = useState(false);
+  const [uiMessage, setUiMessage] = useState({ type: "", text: "" });
   const hydrateStore = usePayStubStore(state => state.hydrateStore);
   const resetFinancialDefaults = usePayStubStore(state => state.resetFinancialDefaults);
   const storeState = usePayStubStore();
@@ -325,14 +325,14 @@ const Success = () => {
                      formData: parsedDraft
                    })
                  }).then(res => {
-                    if (!res.ok) setEmailError(true);
+                    if (!res.ok) setUiMessage({ type: 'error', text: 'Error sending email...' });
                  }).catch((e) => {
                     console.error('Email action failed');
-                    setEmailError(true);
+                    setUiMessage({ type: 'error', text: 'Error sending email...' });
                  });
              } catch (e) {
                  console.error('Email action failed');
-                 setEmailError(true);
+                 setUiMessage({ type: 'error', text: 'Error sending email...' });
              }
           }
         } else {
@@ -363,7 +363,7 @@ const Success = () => {
 
   const handleEmailSend = async () => {
     if (!emailInput) return;
-    setEmailError('');
+    setUiMessage({ type: '', text: '' });
     setIsSendingEmail(true);
     try {
       const res = await fetch('/api/send-email', {
@@ -376,10 +376,10 @@ const Success = () => {
         })
       });
       if (!res.ok) throw new Error("Failed to send email");
-      setEmailError('Success');
+      setUiMessage({ type: 'success', text: 'Email sent successfully!' });
       setEmailInput('');
     } catch (e) {
-      setEmailError(e.message);
+      setUiMessage({ type: 'error', text: e.message });
     } finally {
       setIsSendingEmail(false);
     }
@@ -520,7 +520,7 @@ const Success = () => {
 
     } catch (e) {
       console.error("Download Error:", e);
-      setEmailError(`Download failed: ${e.message}. Please check your email for the backup copy.`);
+      setUiMessage({ type: 'error', text: `Download failed: ${e.message}. Please check your email for the backup copy.` });
     } finally {
       setDownloading(false);
     }
@@ -579,14 +579,9 @@ const Success = () => {
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>
-        {emailError && emailError !== 'Success' && (
-          <div className="bg-red-500/10 text-red-400 p-4 rounded-xl mb-8 border border-red-500/20 text-sm font-medium">
-            {emailError.includes("Download failed") ? emailError : "Delivery encountered an issue: " + emailError + ". Your direct PDF download remains perfectly safe and available below."}
-          </div>
-        )}
-        {emailError === 'Success' && (
-          <div className="bg-green-500/10 text-green-400 p-4 rounded-xl mb-8 border border-green-500/20 text-sm font-medium">
-            Email sent successfully!
+        {uiMessage.text && (
+          <div className={`p-4 rounded-xl mb-4 text-sm font-bold ${uiMessage.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+            {uiMessage.text}
           </div>
         )}
 

@@ -11,7 +11,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [uiError, setUiError] = useState("");
+  const [uiMessage, setUiMessage] = useState({ type: "", text: "" });
   const [planType, setPlanType] = useState('single');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const storeState = usePayStubStore();
@@ -26,11 +26,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
 
 
   const handlePayment = async () => {
-    setUiError("");
+    setUiMessage({ type: "", text: "" });
     if (window.dataLayer) window.dataLayer.push({ event: 'begin_checkout', value: planType === 'bundle' ? 20.00 : 4.00, currency: 'USD' });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setUiError("Please enter a valid email address");
+      setUiMessage({ type: "error", text: "Please enter a valid email address" });
       return;
     }
     
@@ -138,7 +138,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
       }
     } catch (e) {
       console.error("Payment Initialization Failed:", e);
-      setUiError(`Billing Gateway Error: ${e.message}. Please try again or contact ${BRANDING.supportEmail}`);
+      setUiMessage({ type: "error", text: `Billing Gateway Error: ${e.message}. Please try again or contact ${BRANDING.supportEmail}` });
     } finally {
       setLoading(false);
     }
@@ -264,9 +264,9 @@ const PaymentModal = ({ isOpen, onClose }) => {
               </button>
             </div>
 
-            {uiError && (
-              <div className="bg-red-500/10 border border-red-500 text-red-400 p-3 rounded-lg mb-4">
-                {uiError}
+            {uiMessage.text && (
+              <div className={`p-4 rounded-xl mb-4 text-sm font-bold ${uiMessage.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                {uiMessage.text}
               </div>
             )}
 
