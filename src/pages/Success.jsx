@@ -595,7 +595,8 @@ const Success = () => {
           <div>
             <button
               onClick={handleDownload}
-              className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 shadow-[0_0_40px_rgba(0,229,255,0.2)]"
+              disabled={downloading}
+              className={`w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl transition-all flex items-center justify-center gap-3 ${downloading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white shadow-[0_0_40px_rgba(0,229,255,0.2)]'}`}
             >
               {downloading ? (
                 <div className="flex items-center gap-3">
