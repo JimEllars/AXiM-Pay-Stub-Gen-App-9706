@@ -353,16 +353,18 @@ const Success = () => {
   useEffect(() => {
     const hasAlreadyDownloaded = sessionStorage.getItem('auto_downloaded_' + searchParams.get('session_id'));
 
-    if (status === 'success' && !downloading && !autoDownloaded && !hasAlreadyDownloaded) {
+    if (status === 'success' && !autoDownloaded && !hasAlreadyDownloaded) {
       setAutoDownloaded(true);
       sessionStorage.setItem('auto_downloaded_' + searchParams.get('session_id'), 'true');
       handleDownload();
     }
-  }, [status, downloading, autoDownloaded, searchParams]);
+  }, [status, autoDownloaded, searchParams]);
 
 
   const handleEmailSend = async () => {
     if (!emailInput) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailInput)) { setUiMessage({ type: 'error', text: 'Please enter a valid email address.' }); setIsSendingEmail(false); return; }
     setUiMessage({ type: '', text: '' });
     setIsSendingEmail(true);
     try {
@@ -653,11 +655,12 @@ const Success = () => {
                   employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', zipCode: '' },
                   payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' }
               });
-              sessionStorage.removeItem('axim_paystub_draft');
+              sessionStorage.removeItem('axim_paystub_draft_continuous');
               sessionStorage.removeItem('axim_paystub_draft_queue');
               sessionStorage.removeItem('paystub_delivery_email');
             }}
-            className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-[10px]"
+            className="block w-full text-gray-500 font-bold py-4 mt-4 hover:text-white transition-all uppercase tracking-widest text-xs md:text-sm"
+            role="button"
           >
             Return to Dashboard
           </Link>
