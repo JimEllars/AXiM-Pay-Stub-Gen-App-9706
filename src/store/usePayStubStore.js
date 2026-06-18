@@ -201,10 +201,7 @@ export const usePayStubStore = create(persist((set, get) => ({
       }
       if (field === 'payDate' && newPayPeriod.endDate) {
         if (new Date(newPayPeriod.payDate) < new Date(newPayPeriod.endDate)) {
-          newPayPeriod.endDate = newPayPeriod.payDate;
-          if (newPayPeriod.startDate && new Date(newPayPeriod.endDate) < new Date(newPayPeriod.startDate)) {
-            newPayPeriod.startDate = newPayPeriod.endDate;
-          }
+          newPayPeriod.payDate = newPayPeriod.endDate;
         }
       }
 
