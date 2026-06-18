@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { PAY_FREQUENCIES, STANDARD_DEDUCTION_2024 } from '../utils/constants';
 
 
@@ -478,4 +478,5 @@ addEarning: () => set((state) => ({
   }
 }), {
   name: 'axim_paystub_draft_continuous',
+  storage: createJSONStorage(() => sessionStorage)
 }));
