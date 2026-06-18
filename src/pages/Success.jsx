@@ -353,9 +353,9 @@ const Success = () => {
   useEffect(() => {
     const hasAlreadyDownloaded = sessionStorage.getItem('auto_downloaded_' + searchParams.get('session_id'));
 
-    if (status === 'success' && !autoDownloaded && !hasAlreadyDownloaded) {
-      setAutoDownloaded(true);
+    if (status === 'success' && !downloading && !autoDownloaded && !hasAlreadyDownloaded) {
       sessionStorage.setItem('auto_downloaded_' + searchParams.get('session_id'), 'true');
+      setAutoDownloaded(true);
       handleDownload();
     }
   }, [status, autoDownloaded, searchParams]);
@@ -364,7 +364,11 @@ const Success = () => {
   const handleEmailSend = async () => {
     if (!emailInput) return;
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailInput)) { setUiMessage({ type: 'error', text: 'Please enter a valid email address.' }); setIsSendingEmail(false); return; }
+    if (!emailRegex.test(emailInput)) {
+      setUiMessage({ type: 'error', text: 'Please enter a valid email address.' });
+      setIsSendingEmail(false);
+      return;
+    }
     setUiMessage({ type: '', text: '' });
     setIsSendingEmail(true);
     try {
