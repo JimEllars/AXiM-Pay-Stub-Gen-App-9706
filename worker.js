@@ -541,21 +541,39 @@ export default {
 
         const pdfBytes = await finalPdfDoc.save();
 
-        const vaultFormData = new FormData();
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        vaultFormData.append('document', blob, 'paystub.pdf');
-        vaultFormData.append('document_type', 'pay_stub');
-        vaultFormData.append('trace_id', docId);
+                let vaultConsent = true;
+        try {
+           if (status.metadata && status.metadata.state_part_misc) {
+              const miscParsed = JSON.parse(status.metadata.state_part_misc);
+              if (Array.isArray(miscParsed)) {
+                 if (miscParsed.length > 0 && typeof miscParsed[0].vc !== 'undefined') {
+                    vaultConsent = miscParsed[0].vc;
+                 }
+              } else if (typeof miscParsed.vc !== 'undefined') {
+                 vaultConsent = miscParsed.vc;
+              }
+           }
+        } catch(e) {
+           console.error("Failed to parse vault consent", e);
+        }
 
-        ctx.waitUntil(
-          fetchWithRetry(`${apiBase}/v1/vault-upload`, {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
-            },
-            body: vaultFormData
-          }).catch(e => console.error("Vault upload failed:", e))
-        );
+        if (vaultConsent) {
+          const vaultFormData = new FormData();
+          const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+          vaultFormData.append('document', blob, 'paystub.pdf');
+          vaultFormData.append('document_type', 'pay_stub');
+          vaultFormData.append('trace_id', docId);
+
+          ctx.waitUntil(
+            fetchWithRetry(`${apiBase}/v1/vault-upload`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+              },
+              body: vaultFormData
+            }).catch(e => console.error("Vault upload failed:", e))
+          );
+        }
 
         // Mark session as fulfilled
         const stripeUpdateData = new URLSearchParams();

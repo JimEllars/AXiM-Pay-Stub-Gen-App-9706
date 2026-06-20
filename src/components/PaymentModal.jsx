@@ -50,7 +50,8 @@ const PaymentModal = ({ isOpen, onClose }) => {
       payPeriod: storeState.payPeriod,
       earnings: storeState.earnings,
       customDeductions: storeState.customDeductions,
-      calculatedTotals: storeState.calculatedTotals
+      calculatedTotals: storeState.calculatedTotals,
+      vaultConsent: storeState.vaultConsent
     };
 
         if (planType === 'bundle') {
@@ -86,14 +87,14 @@ const PaymentModal = ({ isOpen, onClose }) => {
           ppData = queue.map(s => s.payPeriod);
           eaData = queue.map(s => (s.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate })));
           cdData = queue.map(s => (s.customDeductions || []).map(d => ({ n: d.name, a: d.amount })));
-          miscData = queue.map(s => ({ t: s.theme, ac: s.autoCalculate, ygo: s.ytdGrossOverridden, to: s.taxOverrides }));
+          miscData = queue.map(s => ({ t: s.theme, ac: s.autoCalculate, ygo: s.ytdGrossOverridden, to: s.taxOverrides, vc: storeState.vaultConsent }));
       } else {
           erData = { n: storeState.employerDetails?.name, a: storeState.employerDetails?.address, e: storeState.employerDetails?.ein };
           eeData = { n: storeState.employeeDetails?.name, a: storeState.employeeDetails?.address, m: storeState.employeeDetails?.maritalStatus, st: storeState.employeeDetails?.state };
           ppData = storeState.payPeriod;
           eaData = (storeState.earnings || []).map(e => ({ t: e.type, h: e.hours, r: e.rate }));
           cdData = (storeState.customDeductions || []).map(d => ({ n: d.name, a: d.amount }));
-          miscData = { t: storeState.theme, ac: storeState.autoCalculate, ygo: storeState.ytdGrossOverridden, to: storeState.taxOverrides };
+          miscData = { t: storeState.theme, ac: storeState.autoCalculate, ygo: storeState.ytdGrossOverridden, to: storeState.taxOverrides, vc: storeState.vaultConsent };
       }
 
       const response = await fetch('/api/create-checkout-session', {
@@ -176,6 +177,15 @@ const PaymentModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="space-y-8">
+            <label className="flex items-center gap-2 mb-4 cursor-pointer text-sm text-gray-400">
+              <input
+                type="checkbox"
+                checked={storeState.vaultConsent}
+                onChange={(e) => storeState.toggleVaultConsent(e.target.checked)}
+                className="accent-axim-teal rounded bg-black/50 border-white/10"
+              />
+              Securely back up my document to the AXiM Vault
+            </label>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Delivery Email</label>
               <input 
