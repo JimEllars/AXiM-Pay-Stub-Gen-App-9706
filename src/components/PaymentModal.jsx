@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 const PaymentModal = ({ isOpen, onClose }) => {
 
   const [email, setEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [loading, setLoading] = useState(false);
   const [uiMessage, setUiMessage] = useState({ type: "", text: "" });
   const [planType, setPlanType] = useState('single');
@@ -30,12 +31,13 @@ const PaymentModal = ({ isOpen, onClose }) => {
     if (window.dataLayer) window.dataLayer.push({ event: 'begin_checkout', value: planType === 'bundle' ? 20.00 : 4.00, currency: 'USD' });
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      setUiMessage({ type: "error", text: "Please enter a valid email address" });
+      setEmailError("Please enter a valid email address.");
       return;
     }
     
 
 
+    setEmailError('');
     setLoading(true);
 
     // PHASE 3: Fortify State Handoff
@@ -191,10 +193,11 @@ const PaymentModal = ({ isOpen, onClose }) => {
               <input 
                 type="email" 
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
                 placeholder="name@company.com"
                 className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-axim-teal transition-all font-mono"
               />
+              {emailError && <p className="text-red-400 text-xs mt-1 text-left">{emailError}</p>}
             </div>
 
             <div className="grid grid-cols-1 gap-3">

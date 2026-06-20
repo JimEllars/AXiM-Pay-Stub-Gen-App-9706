@@ -420,6 +420,10 @@ export default {
         drawText(`$${formatCurrency(netPayCurrent)}`, 350, finalY, 14, true);
       }
 
+            if (employerDetails?.memo) {
+        drawText(`MEMO: ${employerDetails.memo}`, 40, finalY - 40, 10, true, rgb(0,0,0));
+      }
+
       drawText('This document is a generic estimation for personal record-keeping only.', 100, 30, 8, false);
 
       const docId = 'PS-' + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -699,6 +703,16 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
 
         // Proxy to Core Telemetry
         // Fire and forget or await, but return success locally quickly
+        ctx.waitUntil(
+          fetchWithRetry(`${apiBase}/v1/telemetry/ingest`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+            },
+            body: JSON.stringify(payload)
+          }).catch(e => console.error("Proxy Telemetry failed:", e))
+        );
 
 
         return new Response(JSON.stringify({ status: 'queued' }), {
