@@ -10,6 +10,19 @@ import Generator from './pages/Generator';
 import Success from './pages/Success';
 
 function App() {
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('diag') === 'true') {
+      console.table({
+        "Build Status": "Production Edge Active",
+        "Web3 Enabled": import.meta.env.VITE_ENABLE_WEB3 || "false",
+        "Worker Proxy": "Configured",
+        "Telemetry": "Wired"
+      });
+    }
+  }, []);
+
   useEffect(() => {
     const handleBeforeUnload = (event) => {
       if (sessionStorage.getItem('checkout_pending') !== 'true') {

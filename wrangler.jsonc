@@ -1,16 +1,9 @@
 {
-  "name": "axim-pay-stub-proxy",
-  "main": "worker.js",
-  "compatibility_date": "2024-02-28",
+  "name": "axim-paystub-edge",
+  "compatibility_date": "2024-03-01",
+  "pages_build_output_dir": "dist",
   "vars": {
-    "ENVIRONMENT": "production",
-    "AXIM_API_BASE": "https://api.axim.us.com/v1"
-  },
-  "env": {
-    "production": {
-      "routes": [
-        { "pattern": "api.axim.us.com/api/*", "zone_name": "axim.us.com" }
-      ]
-    }
+    "ENVIRONMENT": "production"
+    // Note: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, and AXIM_SERVICE_KEY must be added via Cloudflare Dashboard secrets, NOT in this file.
   }
 }
