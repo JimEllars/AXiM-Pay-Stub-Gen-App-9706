@@ -17,7 +17,7 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
 const EmployerSection = () => {
   const { employerDetails, updateEmployer } = usePayStubStore();
   const [isZipLoading, setIsZipLoading] = useState(false);
-  const [fileError, setFileError] = useState('');
+  const [logoError, setLogoError] = useState('');
 
   return (
     <div className="space-y-8">
@@ -85,28 +85,29 @@ const EmployerSection = () => {
               type="file"
               accept="image/png, image/jpeg"
               onChange={(e) => {
-                setFileError('');
+                setLogoError('');
                 const file = e.target.files[0];
                 if (!file) return;
                 if (file.size > 300 * 1024) {
-                  setFileError("Logo must be under 300KB");
+                  setLogoError("Logo must be under 300KB");
                   e.target.value = '';
                   return;
                 }
                 if (file.type !== 'image/jpeg' && file.type !== 'image/png') {
-                  setFileError('Only JPG or PNG images are supported.');
+                  setLogoError('Only JPG or PNG images are supported.');
                   e.target.value = '';
                   return;
                 }
                 const reader = new FileReader();
                 reader.onloadend = () => {
+                  setLogoError('');
                   updateEmployer('companyLogo', reader.result);
                 };
                 reader.readAsDataURL(file);
               }}
-              className={`bg-black/50 border ${fileError ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white`}
+              className={`bg-black/50 border ${logoError ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-axim-teal file:text-black hover:file:bg-white`}
             />
-            {fileError && <span className="text-red-500 text-xs mt-1">{fileError}</span>}
+            {logoError && <span className="text-red-500 text-xs mt-1">{logoError}</span>}
             {employerDetails.companyLogo && (
               <div className="mt-2 text-right">
                 <button
@@ -125,6 +126,17 @@ const EmployerSection = () => {
           </div>
 
         </div>
+          <div className="flex flex-col gap-1.5 mb-4 md:col-span-2">
+            <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest flex justify-between">Custom Memo / Notes (Optional, max 100 chars)</label>
+            <textarea
+              value={employerDetails.memo || ''}
+              onChange={(e) => updateEmployer('memo', e.target.value.substring(0, 100))}
+              placeholder="e.g., Q3 Bonus included"
+              maxLength={100}
+              rows={2}
+              className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono resize-none"
+            />
+          </div>
       </div>
     </div>
   );
