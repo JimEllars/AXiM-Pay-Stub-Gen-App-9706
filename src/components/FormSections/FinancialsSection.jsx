@@ -63,7 +63,7 @@ const FinancialsSection = () => {
               </div>
               <div className="col-span-12 md:col-span-3">
                 <input 
-                  type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Hours"
+                  type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" min="0" placeholder="Hours"
                   value={earning.hours || ''}
                   onChange={(e) => updateEarning(earning.id, 'hours', e.target.value)}
 
@@ -75,7 +75,7 @@ const FinancialsSection = () => {
                 <div className="relative">
                   <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
                   <input 
-                    type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" placeholder="Rate"
+                    type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" min="0" placeholder="Rate"
                     value={earning.rate || ''}
                     onChange={(e) => updateEarning(earning.id, 'rate', e.target.value)}
 
@@ -208,7 +208,7 @@ const FinancialsSection = () => {
             <div className="relative">
               <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
               <input 
-                type="number" inputMode="decimal" pattern="[0-9]*" step="0.01"
+                type="number" inputMode="decimal" pattern="[0-9]*" step="0.01" min="0"
                 value={calculatedTotals.ytdGross || ''}
                 onChange={(e) => updateYtdGross(e.target.value)}
 

@@ -26,7 +26,8 @@ const EmployeeSection = () => {
       <div className="bg-glass border border-white/10 p-6 rounded-xl backdrop-blur-md">
         <h2 className="text-lg font-bold text-axim-teal mb-4 uppercase tracking-wider">Employee Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField label="Full Name" value={employeeDetails.name} required error={!employeeDetails.name} onChange={(v) => updateEmployee('name', v)} placeholder="John Doe" />
+          <InputField label="Full Name" value={employeeDetails.name} required error={!employeeDetails.name} onChange={(v) => updateEmployee('name', v)} placeholder="John Doe" maxLength={50} />
+          <InputField label="Job Title" value={employeeDetails.jobTitle || ''} onChange={(v) => updateEmployee('jobTitle', v)} placeholder="e.g., Software Engineer" maxLength={40} />
 
           <div className="flex flex-col gap-1.5 mb-4">
              <label className="text-xs font-semibold text-gray-400 uppercase tracking-widest">City</label>
