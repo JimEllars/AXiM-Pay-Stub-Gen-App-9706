@@ -1,5 +1,7 @@
 import React from 'react';
 import { trackEvent } from '../utils/telemetry';
+import { FiAlertCircle } from 'react-icons/fi';
+import SafeIcon from '../common/SafeIcon';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -22,20 +24,24 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-bg-void flex flex-col items-center justify-center p-6 text-white text-center">
-          <div className="bg-red-500/10 p-6 rounded-full text-red-500 mb-8">
-            <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="64" width="64" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div className="min-h-screen bg-bg-void flex items-center justify-center p-6 text-white text-center">
+          <div className="bg-[#0a0a0a] border border-white/10 p-12 rounded-3xl max-w-lg w-full">
+            <div className="text-axim-teal mb-6 flex justify-center"><SafeIcon icon={FiAlertCircle} size={64} /></div>
+            <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Session Disrupted</h2>
+            <p className="text-gray-400 mb-8 text-sm leading-relaxed">
+              A rendering anomaly interrupted your session. Our support systems have been automatically notified.
+            </p>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem('axim_paystub_draft_continuous');
+                sessionStorage.removeItem('axim_paystub_draft_queue');
+                window.location.href = '/';
+              }}
+              className="w-full bg-white text-black font-bold px-8 py-4 rounded-xl hover:bg-axim-teal transition-all"
+            >
+              Securely Reset & Return to Dashboard
+            </button>
           </div>
-          <h2 className="text-4xl font-black tracking-tighter mb-4">APPLICATION ERROR</h2>
-          <p className="text-gray-400 max-w-md mx-auto mb-10 leading-relaxed">
-            Something went wrong. Our team has been notified.
-          </p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="bg-white text-black font-bold px-10 py-5 rounded-2xl hover:bg-axim-teal transition-all"
-          >
-            Return to Dashboard
-          </button>
         </div>
       );
     }

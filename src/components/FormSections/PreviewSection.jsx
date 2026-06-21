@@ -33,6 +33,11 @@ const PreviewSection = ({ onFinalize }) => {
       </div>
 
       <div className="bg-white text-black p-8 md:p-12 rounded-xl shadow-[0_30px_60px_rgba(0,0,0,0.5)] relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden z-0 opacity-10">
+          <div className="transform -rotate-45 text-white font-black text-6xl md:text-9xl tracking-widest whitespace-nowrap">
+            DRAFT PREVIEW
+          </div>
+        </div>
         
         {/* Hardened Professional Watermark Overlay */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 overflow-hidden mix-blend-multiply select-none" style={{ background: 'repeating-linear-gradient(45deg, transparent, transparent 100px, rgba(0,0,0,0.03) 100px, rgba(0,0,0,0.03) 200px)' }}>
