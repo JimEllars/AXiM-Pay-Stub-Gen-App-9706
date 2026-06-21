@@ -12,6 +12,16 @@ import Success from './pages/Success';
 function App() {
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && window.dataLayer) {
+      window.dataLayer.push({
+        event: 'page_view',
+        app_context: 'pay_stub_generator',
+        page_path: window.location.pathname
+      });
+    }
+  }, []);
+
+  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('diag') === 'true') {
       console.table({
