@@ -1,6 +1,7 @@
 import { BRANDING } from '../config/branding';
 
 import React, { useState } from 'react';
+import { trackEvent } from '../utils/telemetry';
 import { motion, AnimatePresence } from 'framer-motion';
 import SafeIcon from '../common/SafeIcon';
 import { FiX, FiLock } from 'react-icons/fi';
@@ -135,6 +136,12 @@ const PaymentModal = ({ isOpen, onClose }) => {
       if (data.url) {
         // Redirect to actual Stripe Checkout
         sessionStorage.setItem('checkout_pending', 'true');
+        trackEvent('checkout_initiated', {
+       plan_type: planType,
+       currency: 'USD',
+       value: planType === 'bundle' ? 20.00 : 4.00,
+       has_vault_consent: storeState.vaultConsent
+     });
         window.location.href = data.url;
       } else {
         throw new Error("Checkout URL not found in response.");
@@ -195,7 +202,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setEmailError(''); }}
                 placeholder="name@company.com"
-                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-axim-teal transition-all font-mono"
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 text-white focus:outline-none focus:border-axim-teal transition-all font-mono" disabled={loading}
               />
               {emailError && <p className="text-red-400 text-xs mt-1 text-left">{emailError}</p>}
             </div>
@@ -241,7 +248,8 @@ const PaymentModal = ({ isOpen, onClose }) => {
                   sessionStorage.removeItem('axim_paystub_draft_queue');
                   syncDraftQueueToProfile([]);
                 }}
-                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all ${planType === 'single' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                disabled={loading}
+                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all ${planType === 'single' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div>
                   <p className="text-sm text-white font-medium">Single Pay Stub</p>
@@ -266,7 +274,8 @@ const PaymentModal = ({ isOpen, onClose }) => {
                   sessionStorage.removeItem('axim_paystub_draft_queue');
                   syncDraftQueueToProfile([]);
                 }}
-                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all relative overflow-hidden ${planType === 'bundle' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'}`}
+                disabled={loading}
+                className={`p-4 rounded-2xl border text-left flex justify-between items-center transition-all relative overflow-hidden ${planType === 'bundle' ? 'bg-axim-teal/10 border-axim-teal' : 'bg-white/5 border-white/5 hover:border-white/20'} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 <div className="absolute top-0 right-0 bg-axim-gold text-black text-[9px] font-black uppercase tracking-wider px-2 py-1 rounded-bl-lg">Most Popular</div>
                 <div>

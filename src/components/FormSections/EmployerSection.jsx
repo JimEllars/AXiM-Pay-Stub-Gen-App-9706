@@ -136,6 +136,7 @@ const EmployerSection = () => {
               rows={2}
               className="bg-black/50 border border-white/10 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono resize-none"
             />
+            <p className="text-[10px] text-gray-500 mt-1 italic">This note will appear at the bottom of the final document.</p>
           </div>
       </div>
     </div>
