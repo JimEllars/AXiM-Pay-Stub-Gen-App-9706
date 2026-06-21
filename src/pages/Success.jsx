@@ -615,6 +615,9 @@ const Success = () => {
         <p className="text-gray-400 mb-10 leading-relaxed px-4">
           Verification successful. Your pay stub for <span className="text-white font-bold">{storeState.employeeDetails?.name || 'the employee'}</span> is now available for download.
         </p>
+        <p className="text-gray-400 mt-4 text-sm max-w-md mx-auto">
+          Your document should download automatically. If it does not appear, please check your browser's pop-up blocker settings.
+        </p>
         {uiMessage.text && (
           <div className={`p-4 rounded-xl mb-4 text-sm font-bold ${uiMessage.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {uiMessage.text}
