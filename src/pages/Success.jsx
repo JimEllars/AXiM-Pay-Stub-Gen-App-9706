@@ -542,7 +542,7 @@ const Success = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Statement_${searchParams.get('session_id').substring(0, 8)}.pdf`;
+      a.download = `AXiM_Secure_PayStub_${new Date().getTime()}.pdf`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
