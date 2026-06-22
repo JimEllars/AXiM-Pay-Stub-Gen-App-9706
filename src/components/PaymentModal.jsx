@@ -307,12 +307,12 @@ const PaymentModal = ({ isOpen, onClose }) => {
             <button 
               onClick={handlePayment}
               disabled={loading || !isValid || !agreedToTerms}
-              className="w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl hover:bg-white transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(0,229,255,0.2)]"
+              className={`w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(0,229,255,0.2)] ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-axim-teal"}`}
             >
               {loading ? (
                 <div className="flex items-center gap-3">
                    <div className="w-4 h-4 border-2 border-bg-void/30 border-t-bg-void rounded-full animate-spin" />
-                   <span>Initializing...</span>
+                   <span>Securing Session...</span>
                 </div>
               ) : (
                 <>
