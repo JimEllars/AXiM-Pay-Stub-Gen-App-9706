@@ -23,7 +23,7 @@ const FinancialsSection = () => {
             <h2 className="text-lg font-bold text-white uppercase tracking-wider">Earnings</h2>
           </div>
           <div className="flex gap-4">
-             <button
+             <button type="button"
                onClick={resetFinancialDefaults}
                className="text-xs flex items-center gap-2 bg-white/5 hover:bg-white/10 text-gray-300 px-4 py-2 rounded-lg transition-colors border border-white/10"
              >
@@ -31,7 +31,7 @@ const FinancialsSection = () => {
                Clear Financial Profile
              </button>
              {earnings.length < 6 && (
-               <button onClick={addEarning} className="flex items-center gap-2 text-sm font-bold text-axim-teal hover:text-white transition-colors">
+               <button type="button" onClick={addEarning} className="flex items-center gap-2 text-sm font-bold text-axim-teal hover:text-white transition-colors">
                  <SafeIcon icon={FiPlus} /> Add Earning
                </button>
              )}
@@ -85,7 +85,7 @@ const FinancialsSection = () => {
               </div>
               <div className="col-span-12 md:col-span-2 text-right">
                 {earnings.length > 1 && (
-                  <button onClick={() => removeEarning(earning.id)} className="text-red-400/50 hover:text-red-400 p-2 transition-colors">
+                  <button type="button" onClick={() => removeEarning(earning.id)} className="text-red-400/50 hover:text-red-400 p-2 transition-colors">
                     <SafeIcon icon={FiTrash2} />
                   </button>
                 )}
@@ -105,7 +105,7 @@ const FinancialsSection = () => {
             <h2 className="text-lg font-bold text-white uppercase tracking-wider">Custom Deductions</h2>
           </div>
           {customDeductions.length < 6 && (
-            <button onClick={addCustomDeduction} className="flex items-center gap-2 text-sm font-bold text-axim-gold hover:text-white transition-colors">
+            <button type="button" onClick={addCustomDeduction} className="flex items-center gap-2 text-sm font-bold text-axim-gold hover:text-white transition-colors">
               <SafeIcon icon={FiPlus} /> Add Deduction
             </button>
           )}
@@ -136,7 +136,7 @@ const FinancialsSection = () => {
                 </div>
               </div>
               <div className="col-span-2 md:col-span-2 text-right">
-                <button onClick={() => removeCustomDeduction(deduction.id)} className="text-red-400/50 hover:text-red-400 p-2 transition-colors">
+                <button type="button" onClick={() => removeCustomDeduction(deduction.id)} className="text-red-400/50 hover:text-red-400 p-2 transition-colors">
                   <SafeIcon icon={FiTrash2} />
                 </button>
               </div>
@@ -161,7 +161,7 @@ const FinancialsSection = () => {
 
           <div className="ml-auto flex items-center gap-3">
             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Auto-Calculate</span>
-            <button
+            <button type="button"
               onClick={() => toggleAutoCalculate(!autoCalculate)}
               className={`w-10 h-5 rounded-full relative transition-colors ${autoCalculate ? 'bg-axim-teal' : 'bg-gray-600'}`}
             >
@@ -178,7 +178,7 @@ const FinancialsSection = () => {
             stateIncomeTax: 'State Tax'
           }).map(([key, label]) => (
             <div key={key} className="flex flex-col gap-1.5">
-              <div className="flex justify-between items-center mb-1.5"><label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>{taxOverrides[key] && <button onClick={() => resetTaxOverride(key)} className="text-[9px] text-axim-gold hover:text-white flex items-center gap-1 transition-colors"><SafeIcon icon={FiRefreshCw} size={10} /> Reset</button>}</div>
+              <div className="flex justify-between items-center mb-1.5"><label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{label}</label>{taxOverrides[key] && <button type="button" onClick={() => resetTaxOverride(key)} className="text-[9px] text-axim-gold hover:text-white flex items-center gap-1 transition-colors"><SafeIcon icon={FiRefreshCw} size={10} /> Reset</button>}</div>
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-gray-500 font-mono text-xs select-none pointer-events-none">$</span>
                 <input 

@@ -9,6 +9,7 @@ const InputField = ({ label, value, onChange, type = "text", placeholder, requir
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
+      required={required}
       className={`bg-black/50 border ${error ? 'border-red-500/50' : 'border-white/10'} rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-axim-teal focus:ring-1 focus:ring-axim-teal transition-all font-mono`}
     />
   </div>
