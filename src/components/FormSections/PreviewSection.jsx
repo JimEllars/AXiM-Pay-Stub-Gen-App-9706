@@ -186,7 +186,7 @@ const PreviewSection = ({ onFinalize }) => {
         </div>
 
         <button
-          onClick={async () => {
+          type="button" onClick={async () => {
             const formData = usePayStubStore.getState();
             try {
               const res = await fetch('/api/generate-preview', {
@@ -216,7 +216,7 @@ const PreviewSection = ({ onFinalize }) => {
           Preview Draft
         </button>
         <button 
-          onClick={() => onFinalize()}
+          type="submit"
           className="group w-full sm:w-auto bg-axim-teal text-bg-void font-black px-10 py-5 rounded-2xl hover:bg-white transition-all duration-500 flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,229,255,0.3)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-axim-teal"
           disabled={!validateForm()}
         >

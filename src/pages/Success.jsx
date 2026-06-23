@@ -594,6 +594,7 @@ const Success = () => {
       </div>
     );
   }
+  const error = uiMessage.type === "error";
 
   return (
     <div className="min-h-screen bg-bg-void flex items-center justify-center p-4">
@@ -618,12 +619,23 @@ const Success = () => {
         <p className="text-gray-400 mt-4 text-sm max-w-md mx-auto">
           Your document should download automatically. If it does not appear, please check your browser's pop-up blocker settings.
         </p>
-        {uiMessage.text && (
+        {uiMessage.text && uiMessage.type !== 'error' && (
           <div className={`p-4 rounded-xl mb-4 text-sm font-bold ${uiMessage.type === 'success' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
             {uiMessage.text}
           </div>
         )}
 
+        {error && (
+          <div className="mt-8 p-6 bg-red-900/20 border border-red-500/30 rounded-xl text-center">
+            <h3 className="text-red-400 font-bold mb-2">Document Generation Timeout</h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Your payment was successful, but the document generation took too long. Our system has saved your draft.
+            </p>
+            <p className="text-gray-400 text-xs">
+              Please contact <span className="text-white font-mono">support@axim.us.com</span> with your email address to receive your document manually.
+            </p>
+          </div>
+        )}
         <div className="space-y-4">
           <div>
             <button
