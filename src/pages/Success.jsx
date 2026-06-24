@@ -631,9 +631,13 @@ const Success = () => {
             <p className="text-gray-300 text-sm mb-4">
               Your payment was successful, but the document generation took too long. Our system has saved your draft.
             </p>
-            <p className="text-gray-400 text-xs">
-              Please contact <span className="text-white font-mono">support@axim.us.com</span> with your email address to receive your document manually.
-            </p>
+            <div className="text-gray-400 text-xs flex flex-col items-center gap-2">
+       <span>Please contact <span className="text-white font-mono">support@axim.us.com</span> to receive your document manually.</span>
+       <div className="bg-black/50 border border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
+         <span className="uppercase tracking-widest font-bold text-[10px]">Session ID:</span>
+         <span className="font-mono text-axim-gold">{searchParams.get('session_id') || 'UNKNOWN'}</span>
+       </div>
+     </div>
           </div>
         )}
         <div className="space-y-4">
