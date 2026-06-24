@@ -162,8 +162,26 @@ const Generator = () => {
       <div className="max-w-screen-2xl mx-auto px-4 py-12 md:py-20 lg:flex lg:gap-12">
         
         {/* Left Column - Form Content (70%) */}
-        <form className="lg:w-1/2 mb-24 lg:mb-0" onSubmit={(e) => { e.preventDefault(); if (currentStep === 4) setPaymentModalOpen(true); else setCurrentStep(prev => Math.min(prev + 1, 4)); }}>
+        <form className="lg:w-1/2 mb-24 lg:mb-0" onSubmit={(e) => e.preventDefault()}>
           
+          <div className="flex justify-between items-center mb-6">
+       <h1 className="text-xl font-black uppercase tracking-widest text-white">Document Generator</h1>
+       <button
+         type="button"
+         onClick={() => {
+           if (window.confirm("Are you sure you want to securely erase all form data?")) {
+             usePayStubStore.getState().resetFinancialDefaults();
+             usePayStubStore.getState().hydrateStore({ ...usePayStubStore.getState(), employerDetails: { name: '', address: '', city: '', state: '', ein: '', zipCode: '', companyLogo: null, memo: '' }, employeeDetails: { name: '', address: '', city: '', maritalStatus: 'single', state: 'TX', zipCode: '' }, payPeriod: { frequency: 'bi-weekly', startDate: '', endDate: '', payDate: '' } });
+             sessionStorage.removeItem('axim_paystub_draft_continuous');
+             sessionStorage.removeItem('axim_paystub_draft_queue');
+           }
+         }}
+         className="text-xs font-bold text-gray-500 hover:text-red-400 transition-colors uppercase tracking-wider flex items-center gap-1"
+       >
+         <SafeIcon icon={FiAlertTriangle} size={12} /> Clear All Data
+       </button>
+     </div>
+
           {/* Step Navigation */}
           <div className="flex items-center gap-4 mb-10 border-b border-white/10 pb-6 overflow-x-auto">
             {STEPS.map((step) => (
