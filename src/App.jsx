@@ -11,13 +11,9 @@ import Success from './pages/Success';
 
 function App() {
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (typeof window !== 'undefined' && window.dataLayer) {
-      window.dataLayer.push({
-        event: 'page_view',
-        app_context: 'pay_stub_generator',
-        page_path: window.location.pathname
-      });
+      window.dataLayer.push({ event: 'page_view', app_context: 'pay_stub_generator', page_path: window.location.pathname });
     }
   }, []);
 
