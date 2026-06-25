@@ -625,21 +625,21 @@ const Success = () => {
           </div>
         )}
 
-        {error && (
-          <div className="mt-8 p-6 bg-red-900/20 border border-red-500/30 rounded-xl text-center">
-            <h3 className="text-red-400 font-bold mb-2">Document Generation Timeout</h3>
-            <p className="text-gray-300 text-sm mb-4">
-              Your payment was successful, but the document generation took too long. Our system has saved your draft.
-            </p>
-            <div className="text-gray-400 text-xs flex flex-col items-center gap-2">
-       <span>Please contact <span className="text-white font-mono">support@axim.us.com</span> to receive your document manually.</span>
-       <div className="bg-black/50 border border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
-         <span className="uppercase tracking-widest font-bold text-[10px]">Session ID:</span>
-         <span className="font-mono text-axim-gold">{searchParams.get('session_id') || 'UNKNOWN'}</span>
+        {uiMessage.type === 'error' && uiMessage.text.includes('Download failed') && (
+       <div className="mt-8 p-6 bg-red-900/20 border border-red-500/30 rounded-xl text-center">
+         <h3 className="text-red-400 font-bold mb-2">Document Generation Timeout</h3>
+         <p className="text-gray-300 text-sm mb-4">
+           Your payment was successful, but the document generation failed. Our system has saved your secure session.
+         </p>
+         <div className="text-gray-400 text-xs flex flex-col items-center gap-2">
+           <span>Please contact <span className="text-white font-mono">support@axim.us.com</span> to receive your document manually.</span>
+           <div className="bg-black/50 border border-white/10 px-3 py-1.5 rounded-lg flex items-center gap-2 mt-2">
+             <span className="uppercase tracking-widest font-bold text-[10px]">Session ID:</span>
+             <span className="font-mono text-axim-gold">{searchParams.get('session_id') || 'UNKNOWN'}</span>
+           </div>
+         </div>
        </div>
-     </div>
-          </div>
-        )}
+     )}
         <div className="space-y-4">
           <div>
             <button
