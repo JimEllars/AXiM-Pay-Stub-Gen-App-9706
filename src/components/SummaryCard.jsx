@@ -26,7 +26,10 @@ const SummaryCard = () => {
     <>
       {/* Desktop Version */}
       <div className="hidden lg:block sticky top-8 bg-glass border border-white/10 rounded-xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider">Live Summary</h3>
+        <div className="flex items-center gap-2 mb-6">
+       <h3 className="text-xl font-black uppercase tracking-widest text-white">Estimated Net Pay</h3>
+       <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" title="Engine Active"></div>
+     </div>
 
 
         <div className={`mb-6 p-3 rounded-lg border ${isMortgageReady ? 'bg-green-500/10 border-green-500/30' : 'bg-gray-500/10 border-gray-500/30'}`}>
