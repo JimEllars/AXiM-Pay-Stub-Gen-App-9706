@@ -528,6 +528,7 @@ export default {
 
         let finalPdfDoc;
         let docId;
+        const userConsent = Array.isArray(formData) ? formData[0]?.vaultConsent : formData?.vaultConsent;
 
         if (Array.isArray(formData)) {
            // It's a batch! Progressive Streaming (direct page addition)
@@ -568,15 +569,17 @@ export default {
           vaultFormData.append('document_type', 'pay_stub');
           vaultFormData.append('trace_id', docId);
 
-          ctx.waitUntil(
-            fetchWithRetry(`${apiBase}/v1/vault-upload`, {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
-              },
-              body: vaultFormData
-            }).catch(e => console.error("Vault upload failed:", e))
-          );
+          if (userConsent !== false) {
+            ctx.waitUntil(
+              fetchWithRetry(`${apiBase}/v1/vault-upload`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${env.AXIM_SERVICE_KEY}`
+                },
+                body: vaultFormData
+              }).catch(e => console.error("Vault upload failed:", e))
+            );
+          }
         }
 
         // Mark session as fulfilled

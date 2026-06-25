@@ -98,6 +98,10 @@ const Generator = () => {
   ]);
   const currentStep = usePayStubStore((state) => state.currentStep);
   const setCurrentStep = usePayStubStore((state) => state.setCurrentStep);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
   const [isPaymentModalOpen, setPaymentModalOpen] = useState(false);
   const [zoom, setZoom] = useState(typeof window !== 'undefined' && window.innerWidth < 1024 ? 0.7 : 1);
   const validateForm = usePayStubStore((state) => state.validateForm);

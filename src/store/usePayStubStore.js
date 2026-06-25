@@ -94,6 +94,8 @@ const initialFormState = {
   taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false },
   theme: 'Standard Professional',
   autoCalculate: true,
+  vaultConsent: true,
+
   calculatedTotals: {
     currentGross: 0.00,
     ytdGross: 0.00,
@@ -135,6 +137,8 @@ export const usePayStubStore = create(persist((set, get) => ({
   },
 
 
+
+  toggleVaultConsent: (value) => set({ vaultConsent: value }),
 
   toggleAutoCalculate: (value) => {
     set({ autoCalculate: value });
@@ -311,6 +315,7 @@ addEarning: () => set((state) => ({
       ],
       customDeductions: [],
       autoCalculate: true,
+
       taxOverrides: { socialSecurity: false, medicare: false, federalIncomeTax: false, stateIncomeTax: false }
     });
     get().recalculateAll();

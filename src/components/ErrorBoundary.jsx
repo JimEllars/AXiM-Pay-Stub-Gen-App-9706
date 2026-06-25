@@ -15,6 +15,7 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error("ErrorBoundary caught an error", error, errorInfo);
+    trackEvent('application_crash', { error_message: error.toString() });
     trackEvent('frontend_crash', {
       error: error.toString(),
       componentStack: errorInfo.componentStack

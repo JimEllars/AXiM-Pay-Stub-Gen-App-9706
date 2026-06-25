@@ -186,15 +186,6 @@ const PaymentModal = ({ isOpen, onClose }) => {
           </div>
 
           <div className="space-y-8">
-            <label className="flex items-center gap-2 mb-4 cursor-pointer text-sm text-gray-400">
-              <input
-                type="checkbox"
-                checked={storeState.vaultConsent}
-                onChange={(e) => storeState.toggleVaultConsent(e.target.checked)}
-                className="accent-axim-teal rounded bg-black/50 border-white/10"
-              />
-              Securely back up my document to the AXiM Vault
-            </label>
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Delivery Email</label>
               <input 
@@ -206,6 +197,16 @@ const PaymentModal = ({ isOpen, onClose }) => {
               />
               {emailError && <p className="text-red-400 text-xs mt-1 text-left">{emailError}</p>}
             </div>
+            <label className="flex items-center gap-3 mb-4 cursor-pointer text-xs text-gray-400 hover:text-white transition-colors">
+              <input
+                type="checkbox"
+                checked={storeState.vaultConsent ?? true}
+                onChange={(e) => storeState.toggleVaultConsent(e.target.checked)}
+                className="accent-axim-teal w-4 h-4 rounded bg-black/50 border-white/10"
+              />
+              Securely back up a copy of my document to the AXiM Vault
+            </label>
+
 
             <div className="grid grid-cols-1 gap-3">
               <button
