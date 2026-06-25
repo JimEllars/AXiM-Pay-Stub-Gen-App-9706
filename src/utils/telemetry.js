@@ -1,14 +1,15 @@
-export const trackEvent = (eventName, eventData) => {
+export const trackEvent = (eventName, eventData = {}) => {
   try {
     if (typeof window !== 'undefined' && window.dataLayer) {
       window.dataLayer.push({
         event: eventName,
-        ...eventData,
-        timestamp: new Date().toISOString()
+        app_context: 'pay_stub_generator',
+        user_agent: navigator.userAgent,
+        timestamp: new Date().toISOString(),
+        ...eventData
       });
     }
   } catch (error) {
-    // Fail silently to prevent ad-blockers from crashing the app execution
-    console.warn('Telemetry suppressed by client.');
+    console.warn('Telemetry suppressed by client environment.');
   }
 };
