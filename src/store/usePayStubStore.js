@@ -443,6 +443,7 @@ addEarning: () => set((state) => ({
 
     const updatedCustomDeductions = state.customDeductions.map(d => ({
         ...d,
+        name: d.name && d.name.trim() !== '' ? d.name : 'Custom Deduction',
         ytd: parseFloat(((d.amount || 0) * effectivePeriods).toFixed(2))
     }));
     set({ customDeductions: updatedCustomDeductions });

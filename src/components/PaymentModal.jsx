@@ -16,6 +16,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
   const [uiMessage, setUiMessage] = useState({ type: "", text: "" });
   const [planType, setPlanType] = useState('single');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [tosAgreed, setTosAgreed] = useState(false);
   const storeState = usePayStubStore();
   const syncDraftQueueToProfile = usePayStubStore(state => state.syncDraftQueueToProfile);
   const navigate = useNavigate();
@@ -197,6 +198,17 @@ const PaymentModal = ({ isOpen, onClose }) => {
               />
               {emailError && <p className="text-red-400 text-xs mt-1 text-left">{emailError}</p>}
             </div>
+            <label className="flex items-start gap-3 mb-3 cursor-pointer text-xs text-gray-300 hover:text-white transition-colors">
+       <input
+         type="checkbox"
+         checked={tosAgreed}
+         onChange={(e) => setTosAgreed(e.target.checked)}
+         className="accent-axim-teal w-4 h-4 rounded bg-black/50 border-white/10 mt-0.5"
+       />
+       <span>
+         I agree to the <a href="#" className="text-axim-teal hover:underline" onClick={(e) => e.preventDefault()}>Terms of Service</a> and <a href="#" className="text-axim-teal hover:underline" onClick={(e) => e.preventDefault()}>Privacy Policy</a>.
+       </span>
+     </label>
             <label className="flex items-center gap-3 mb-4 cursor-pointer text-xs text-gray-400 hover:text-white transition-colors">
               <input
                 type="checkbox"
@@ -307,7 +319,7 @@ const PaymentModal = ({ isOpen, onClose }) => {
             </div>
             <button 
               onClick={handlePayment}
-              disabled={loading || !isValid || !agreedToTerms}
+              disabled={loading || !isValid || !agreedToTerms || !tosAgreed}
               className={`w-full bg-axim-teal text-bg-void font-black px-8 py-5 rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_30px_rgba(0,229,255,0.2)] ${loading ? "opacity-50 cursor-not-allowed" : "hover:bg-axim-teal"}`}
             >
               {loading ? (

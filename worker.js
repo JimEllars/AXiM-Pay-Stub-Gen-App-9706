@@ -27,6 +27,7 @@ async function fetchWithRetry(url, options, retries = 3) {
  */
 
 const previewRateLimitMap = new Map();
+const emailRateLimitMap = new Map();
 
 // Helper to clean up old rate limit entries
 function cleanupRateLimits() {
@@ -35,6 +36,9 @@ function cleanupRateLimits() {
     if (now - data.startTime > 300000) {
       previewRateLimitMap.delete(ip);
     }
+  }
+  for (const [sess, data] of emailRateLimitMap.entries()) {
+    if (now - data.startTime > 3600000) emailRateLimitMap.delete(sess); // 1 hour TTL
   }
 }
 
@@ -638,6 +642,17 @@ if (url.pathname === '/api/send-email' && request.method === 'POST') {
 
         if (!session_id || !email || !formData) {
            throw new Error("Missing session_id, email, or formData");
+        }
+
+        let emailRateData = emailRateLimitMap.get(session_id);
+        if (!emailRateData) {
+          emailRateData = { count: 1, startTime: Date.now() };
+          emailRateLimitMap.set(session_id, emailRateData);
+        } else {
+          if (emailRateData.count >= 3) {
+            return new Response(JSON.stringify({ error: "Email limit reached for this session." }), { status: 429, headers: corsHeaders });
+          }
+          emailRateData.count++;
         }
 
         // Verify session_id belongs to a paid transaction
